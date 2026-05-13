@@ -1,0 +1,28 @@
+@font-face {
+  font-family: 'Elms Sans';
+  src: url('/fonts/ElmsSans-VariableFont_wght.ttf') format('truetype-variations'),
+       url('/fonts/ElmsSans-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Elms Sans';
+  src: url('/fonts/ElmsSans-Italic-VariableFont_wght.ttf') format('truetype-variations'),
+       url('/fonts/ElmsSans-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+body {
+  margin: 0;
+  font-family: 'Elms Sans', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+}
