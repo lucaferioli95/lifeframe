@@ -66,12 +66,35 @@ export default function App() {
   const [editForm, setEditForm] = useState({});
   const [heroIndex, setHeroIndex] = useState(0);
   const [contactForm, setContactForm] = useState({ name: "", email: "", message: "" });
+  const [contactSending, setContactSending] = useState(false);
+  const [contactMsg, setContactMsg] = useState("");
+  const [contactErr, setContactErr] = useState("");
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotMsg, setForgotMsg] = useState("");
+  const [forgotErr, setForgotErr] = useState("");
+  const [forgotSending, setForgotSending] = useState(false);
+  const [newPass, setNewPass] = useState("");
+  const [newPassConfirm, setNewPassConfirm] = useState("");
+  const [resetMsg, setResetMsg] = useState("");
+  const [resetErr, setResetErr] = useState("");
+  const [resetSaving, setResetSaving] = useState(false);
 
   useEffect(() => {
     fetch("https://api.exchangerate-api.com/v4/latest/GBP")
       .then(r => r.json())
       .then(d => setRates({ GBP: 1, USD: d.rates.USD, EUR: d.rates.EUR }))
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setResetMsg(""); setResetErr("");
+        setNewPass(""); setNewPassConfirm("");
+        setView('resetPassword');
+      }
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
 useEffect(() => {
@@ -381,6 +404,58 @@ setUser({
     notify("Account created! Welcome, " + authForm.name + "!");
   }
   setAuthForm({ name: "", email: "", password: "", confirmPassword: "" });
+};
+
+const handleForgotPassword = async () => {
+  setForgotErr(""); setForgotMsg("");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail)) {
+    setForgotErr("Please enter a valid email address.");
+    return;
+  }
+  setForgotSending(true);
+  const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+    redirectTo: window.location.origin + '/',
+  });
+  setForgotSending(false);
+  if (error) { setForgotErr(error.message); return; }
+  setForgotMsg("If an account exists for that email, a reset link has been sent. Check your inbox (and spam folder).");
+};
+
+const handleResetPassword = async () => {
+  setResetErr(""); setResetMsg("");
+  if (newPass.length < 6) { setResetErr("Password must be at least 6 characters."); return; }
+  if (newPass !== newPassConfirm) { setResetErr("Passwords do not match."); return; }
+  setResetSaving(true);
+  const { error } = await supabase.auth.updateUser({ password: newPass });
+  setResetSaving(false);
+  if (error) { setResetErr(error.message); return; }
+  setResetMsg("Password updated. Redirecting to login...");
+  setNewPass(""); setNewPassConfirm("");
+  await supabase.auth.signOut();
+  setUser(null);
+  setTimeout(() => { setAuthMode("login"); setView("auth"); }, 1800);
+};
+
+const handleSendContact = async () => {
+  setContactErr(""); setContactMsg("");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactForm.email)) {
+    setContactErr("Please enter a valid email address.");
+    return;
+  }
+  setContactSending(true);
+  try {
+    const { error } = await supabase.functions.invoke('send-contact-message', {
+      body: contactForm,
+    });
+    if (error) throw error;
+    setContactMsg("Message sent! I'll get back to you as soon as I can.");
+    setContactForm({ name: "", email: "", message: "" });
+  } catch (err) {
+    console.error('Contact send error:', err);
+    setContactErr("Sorry, something went wrong. Please try again, or email hello.lifeframe@gmail.com directly.");
+  } finally {
+    setContactSending(false);
+  }
 };
 
   const handleSaveSettings = () => {
@@ -872,16 +947,14 @@ const permanentDelete = async (photo) => {
           <textarea style={{ ...input, height: 140, resize: "vertical" }} placeholder="Tell me about your project, the photos you're interested in, or just say hi…" value={contactForm.message} onChange={e => setContactForm(f => ({ ...f, message: e.target.value }))} />
           <button
             style={{ ...btnPri, width: "100%", padding: "12px", marginTop: 6 }}
-            disabled={!contactForm.name || !contactForm.email || !contactForm.message}
-            onClick={() => {
-              const subject = encodeURIComponent("LifeFrame inquiry from " + contactForm.name);
-              const body = encodeURIComponent("Name: " + contactForm.name + "\nEmail: " + contactForm.email + "\n\n" + contactForm.message);
-              window.location.href = "mailto:hello.lifeframe@gmail.com?subject=" + subject + "&body=" + body;
-            }}
+            disabled={!contactForm.name || !contactForm.email || !contactForm.message || contactSending}
+            onClick={handleSendContact}
           >
-            Send message
+            {contactSending ? "Sending..." : "Send message"}
           </button>
-          <p style={{ fontSize: 11, color: "#aaa", margin: "12px 0 0", textAlign: "center" }}>This opens your email app with the message pre-filled.</p>
+          {contactErr && <p style={{ color: "#c00", fontSize: 13, margin: "12px 0 0", textAlign: "center", lineHeight: 1.6 }}>{contactErr}</p>}
+          {contactMsg && <p style={{ color: "#2e7d32", fontSize: 13, margin: "12px 0 0", textAlign: "center", lineHeight: 1.6 }}>{contactMsg}</p>}
+          {!contactErr && !contactMsg && <p style={{ fontSize: 11, color: "#aaa", margin: "12px 0 0", textAlign: "center" }}>Your message will be sent directly to me. I'll reply to the email you provided.</p>}
         </div>
       </div>
       <Footer />
@@ -1201,6 +1274,11 @@ const permanentDelete = async (photo) => {
               {showPass ? "🙈 Hide" : "👁 Show"}
             </button>
           </div>
+          {authMode === "login" && (
+            <p style={{ textAlign: "right", margin: "0 0 12px" }}>
+              <button onClick={() => { setForgotEmail(authForm.email); setForgotMsg(""); setForgotErr(""); setView("forgot"); }} style={{ background: "none", border: "none", color: "#0ea5e9", cursor: "pointer", padding: 0, fontSize: 12 }}>Forgot password?</button>
+            </p>
+          )}
           {authMode === "signup" && (
             <>
               <div style={label}>Confirm password</div>
@@ -1226,6 +1304,60 @@ const permanentDelete = async (photo) => {
               <button onClick={() => { setAuthMode("login"); setAuthErr(""); }} style={{ background: "none", border: "none", color: "#0ea5e9", fontWeight: 600, cursor: "pointer", padding: 0, fontSize: 13 }}>Log in</button>
             </p>
           )}
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+
+  if (view === "forgot") return (
+    <div style={page}><NavBar />
+      {notification && <div style={toast}>{notification}</div>}
+      <div style={{ maxWidth: 400, margin: "2rem auto", padding: "0 1.5rem" }}>
+        <div style={{ background: "#fff", border: "0.5px solid #e0e0e0", borderRadius: 14, padding: "2rem" }}>
+          <p style={{ fontWeight: 600, fontSize: 20, margin: "0 0 6px" }}>Reset your password</p>
+          <p style={{ color: "#666", fontSize: 13, margin: "0 0 20px", lineHeight: 1.6 }}>Enter the email you signed up with and we'll send you a link to set a new password.</p>
+          <div style={label}>Email</div>
+          <input style={input} type="email" placeholder="you@example.com" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} />
+          {forgotErr && <p style={{ color: "#c00", fontSize: 13, margin: "0 0 12px" }}>{forgotErr}</p>}
+          {forgotMsg && <p style={{ color: "#2e7d32", fontSize: 13, margin: "0 0 12px", lineHeight: 1.6 }}>{forgotMsg}</p>}
+          <button style={{ ...btnPri, width: "100%", padding: "11px" }} onClick={handleForgotPassword} disabled={forgotSending}>
+            {forgotSending ? "Sending..." : "Send reset link"}
+          </button>
+          <p style={{ textAlign: "center", fontSize: 13, color: "#666", margin: "16px 0 0" }}>
+            Remembered it?{" "}
+            <button onClick={() => { setAuthMode("login"); setView("auth"); }} style={{ background: "none", border: "none", color: "#0ea5e9", fontWeight: 600, cursor: "pointer", padding: 0, fontSize: 13 }}>Back to login</button>
+          </p>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+
+  if (view === "resetPassword") return (
+    <div style={page}><NavBar />
+      {notification && <div style={toast}>{notification}</div>}
+      <div style={{ maxWidth: 400, margin: "2rem auto", padding: "0 1.5rem" }}>
+        <div style={{ background: "#fff", border: "0.5px solid #e0e0e0", borderRadius: 14, padding: "2rem" }}>
+          <p style={{ fontWeight: 600, fontSize: 20, margin: "0 0 6px" }}>Set a new password</p>
+          <p style={{ color: "#666", fontSize: 13, margin: "0 0 20px", lineHeight: 1.6 }}>Choose a new password for your account. Minimum 6 characters.</p>
+          <div style={label}>New password</div>
+          <div style={{ position: "relative", marginBottom: 10 }}>
+            <input style={{ ...input, marginBottom: 0, paddingRight: 44 }} type={showPass ? "text" : "password"} placeholder="••••••••" value={newPass} onChange={e => setNewPass(e.target.value)} />
+            <button type="button" onClick={() => setShowPass(s => !s)} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: 11, color: "#888", padding: 4 }}>
+              {showPass ? "🙈 Hide" : "👁 Show"}
+            </button>
+          </div>
+          <div style={label}>Confirm new password</div>
+          <input style={input} type={showPass ? "text" : "password"} placeholder="••••••••" value={newPassConfirm} onChange={e => setNewPassConfirm(e.target.value)} />
+          {newPassConfirm && newPass !== newPassConfirm && (
+            <p style={{ color: "#c00", fontSize: 12, margin: "-4px 0 8px" }}>Passwords do not match.</p>
+          )}
+          {resetErr && <p style={{ color: "#c00", fontSize: 13, margin: "0 0 12px" }}>{resetErr}</p>}
+          {resetMsg && <p style={{ color: "#2e7d32", fontSize: 13, margin: "0 0 12px" }}>{resetMsg}</p>}
+          <button style={{ ...btnPri, width: "100%", padding: "11px" }} onClick={handleResetPassword} disabled={resetSaving || !newPass || !newPassConfirm}>
+            {resetSaving ? "Saving..." : "Update password"}
+          </button>
         </div>
       </div>
       <Footer />

@@ -1,46 +1,16 @@
-# LifeFrame 📷
+# React + Vite
 
-> Moments captured. Yours to keep.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-LifeFrame is a photography e-commerce platform I'm building from scratch — a place where customers can browse, favourite, and purchase downloadable photographs directly from the photographer.
+Currently, two official plugins are available:
 
-🚧 **Status: Work in progress.** The core application is live and the storefront is functional, but several pieces are still being wired up before public launch. This repository is private while I clean up the code and complete the final integrations. I'll make it public once the site goes live.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
----
+## React Compiler
 
-## What it does
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-- 🖼️ **Gallery & detail pages** — browse photos by category, view full descriptions and camera metadata
-- 🛒 **Purchase flow** — buyers can checkout and receive their downloads
-- 👤 **Authentication** — separate buyer and admin accounts, powered by Supabase Auth
-- 🔐 **Admin panel** — upload new photos, manage the catalogue, see sales
-- 🛡️ **Image protection** — watermarks, right-click disabled, hidden EXIF metadata
+## Expanding the ESLint configuration
 
-## Tech stack
-
-- **Frontend:** React, Vite
-- **Backend & database:** Supabase (PostgreSQL, Auth, Storage)
-- **Hosting:** Hostinger
-- **Payments:** Stripe & PayPal *(in progress)*
-- **Transactional email:** Resend *(in progress)*
-
-## Roadmap
-
-- [x] Build the React storefront
-- [x] Connect categories & photos to Supabase
-- [x] Set up admin photo management (upload + delete)
-- [x] Configure row-level security policies
-- [x] Add image protection (watermarks, EXIF hiding)
-- [ ] Connect the purchase flow to Supabase 
-- [ ] Integrate Stripe & PayPal payments (only sandbox for now)
-- [ ] Wire up Resend for guest download emails (created, refining)
-- [ ] Connect the custom domain
-- [ ] Final cleanup & public launch
-
-## About me
-
-I'm Luca, Every photo on the platform is my own work.
-
----
-
-*Code currently private — happy to share access on request.*
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
