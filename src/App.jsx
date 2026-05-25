@@ -60,6 +60,7 @@ export default function App() {
   const [settingsForm, setSettingsForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [settingsMsg, setSettingsMsg] = useState("");
   const [settingsErr, setSettingsErr] = useState("");
+  const [settingsSaving, setSettingsSaving] = useState(false);
   const [libraryTab, setLibraryTab] = useState("purchased");
   const [showNewCategory, setShowNewCategory] = useState(false);
   const [newCategory, setNewCategory] = useState("");
@@ -465,16 +466,43 @@ const handleSendContact = async () => {
   }
 };
 
-  const handleSaveSettings = () => {
+  const handleSaveSettings = async () => {
     setSettingsMsg(""); setSettingsErr("");
     if (!settingsForm.name.trim() || !settingsForm.email.trim()) { setSettingsErr("Name and email are required."); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(settingsForm.email)) { setSettingsErr("Please enter a valid email address."); return; }
-    if (settingsForm.email !== user.email && users.find(u => u.email === settingsForm.email)) { setSettingsErr("Email is already in use."); return; }
     if (settingsForm.password && settingsForm.password !== settingsForm.confirmPassword) { setSettingsErr("Passwords do not match."); return; }
-    const updated = { ...user, name: settingsForm.name, email: settingsForm.email, ...(settingsForm.password ? { password: settingsForm.password } : {}) };
-    setUsers(prev => prev.map(u => u.email === user.email ? updated : u));
-    setUser(updated);
-    setSettingsMsg("Settings updated!");
+    if (settingsForm.password && settingsForm.password.length < 6) { setSettingsErr("Password must be at least 6 characters."); return; }
+
+    const { data: sessionData } = await supabase.auth.getUser();
+    const userId = sessionData?.user?.id;
+    if (!userId) { setSettingsErr("Session expired. Please log in again."); return; }
+
+    setSettingsSaving(true);
+
+    // 1. Update name in the profiles table
+    if (settingsForm.name !== user.name) {
+      const { error: profileErr } = await supabase
+        .from('profiles')
+        .update({ name: settingsForm.name })
+        .eq('id', userId);
+      if (profileErr) { setSettingsSaving(false); setSettingsErr("Could not update name: " + profileErr.message); return; }
+    }
+
+    // 2. Update auth email and/or password
+    const authUpdates = {};
+    if (settingsForm.email !== user.email) authUpdates.email = settingsForm.email;
+    if (settingsForm.password) authUpdates.password = settingsForm.password;
+
+    let note = "";
+    if (Object.keys(authUpdates).length > 0) {
+      const { error: authErr } = await supabase.auth.updateUser(authUpdates);
+      if (authErr) { setSettingsSaving(false); setSettingsErr("Could not update account: " + authErr.message); return; }
+      if (authUpdates.email) note = " A confirmation link has been sent to your new email — the change takes effect once you click it.";
+    }
+
+    setSettingsSaving(false);
+    setUser(prev => ({ ...prev, name: settingsForm.name, email: settingsForm.email }));
+    setSettingsMsg("Settings updated!" + note);
     setSettingsForm(f => ({ ...f, password: "", confirmPassword: "" }));
   };
 
@@ -1420,7 +1448,7 @@ const permanentDelete = async (photo) => {
           )}
           {settingsErr && <p style={{ color: "#c00", fontSize: 13, margin: "0 0 12px" }}>{settingsErr}</p>}
           {settingsMsg && <p style={{ color: "#2e7d32", fontSize: 13, margin: "0 0 12px" }}>{settingsMsg}</p>}
-          <button style={{ ...btnPri, width: "100%", padding: "11px" }} onClick={handleSaveSettings}>Save changes</button>
+          <button style={{ ...btnPri, width: "100%", padding: "11px" }} onClick={handleSaveSettings} disabled={settingsSaving}>{settingsSaving ? "Saving..." : "Save changes"}</button>
         </div>
       </div>
       <Footer />
