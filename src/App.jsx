@@ -452,7 +452,7 @@ const handleSendContact = async () => {
     setContactForm({ name: "", email: "", message: "" });
   } catch (err) {
     console.error('Contact send error:', err);
-    setContactErr("Sorry, something went wrong. Please try again, or email hello.lifeframe@gmail.com directly.");
+    setContactErr("Sorry, something went wrong. Please try again, or email hello@lifeframestudio.com directly.");
   } finally {
     setContactSending(false);
   }
@@ -882,7 +882,7 @@ const permanentDelete = async (photo) => {
         <p style={{ fontSize: 12, color: "#888", marginBottom: 32 }}>Last updated: {new Date().toLocaleDateString("en-GB", { year: "numeric", month: "long" })}</p>
 
         <h2 style={{ fontSize: 18, fontWeight: 600, margin: "28px 0 10px" }}>1. Who we are</h2>
-        <p style={{ fontSize: 14, color: "#444", lineHeight: 1.8, marginBottom: 14 }}>LifeFrame is operated by a sole photographer based in London, United Kingdom. To get in touch, please use the <button onClick={() => setView("contact")} style={{ background: "none", border: "none", color: "#0ea5e9", padding: 0, cursor: "pointer", fontSize: 14 }}>Contact</button> page or email <a href="mailto:hello.lifeframe@gmail.com" style={{ color: "#0ea5e9" }}>hello.lifeframe@gmail.com</a>.</p>
+        <p style={{ fontSize: 14, color: "#444", lineHeight: 1.8, marginBottom: 14 }}>LifeFrame is operated by a sole photographer based in London, United Kingdom. To get in touch, please use the <button onClick={() => setView("contact")} style={{ background: "none", border: "none", color: "#0ea5e9", padding: 0, cursor: "pointer", fontSize: 14 }}>Contact</button> page or email <a href="mailto:hello@lifeframestudio.com" style={{ color: "#0ea5e9" }}>hello@lifeframestudio.com</a>.</p>
 
         <h2 style={{ fontSize: 18, fontWeight: 600, margin: "28px 0 10px" }}>2. Copyright and licence</h2>
         <p style={{ fontSize: 14, color: "#444", lineHeight: 1.8, marginBottom: 14 }}>All photographs on this site remain the exclusive copyright of the photographer. When you purchase a photo, you receive a <strong>non-exclusive, non-transferable, perpetual licence for personal use only</strong>. This permits you to: download and store the file for personal access; print copies for personal display; set it as wallpaper on your own devices; share online with credit (please tag or credit LifeFrame).</p>
@@ -921,7 +921,7 @@ const permanentDelete = async (photo) => {
           Every photo on this site is taken, edited, and selected by me. When you buy a photo, you get the original full-resolution file — yours to keep, print, and download as many times as you like.
         </p>
         <p style={{ fontSize: 17, color: "#444", lineHeight: 1.8 }}>
-          For commissions, prints, or just to say hello, get in touch at <a href="mailto:hello.lifeframe@gmail.com" style={{ color: "#0ea5e9", textDecoration: "none" }}>hello.lifeframe@gmail.com</a>.
+          For commissions, prints, or just to say hello, get in touch at <a href="mailto:hello@lifeframestudio.com" style={{ color: "#0ea5e9", textDecoration: "none" }}>hello@lifeframestudio.com</a>.
         </p>
       </div>
       <Footer />
@@ -936,7 +936,7 @@ const permanentDelete = async (photo) => {
         <p style={{ fontSize: 13, letterSpacing: 2, color: "#0ea5e9", textTransform: "uppercase", marginBottom: 16 }}>Contact</p>
         <h1 style={{ fontSize: 42, fontWeight: 700, letterSpacing: -1.5, margin: "0 0 16px", lineHeight: 1.15 }}>Get in touch</h1>
         <p style={{ fontSize: 15, color: "#666", lineHeight: 1.7, marginBottom: 32 }}>
-          For commissions, commercial licensing, or general questions — drop a message below or email me directly at <a href="mailto:hello.lifeframe@gmail.com" style={{ color: "#0ea5e9", textDecoration: "none" }}>hello.lifeframe@gmail.com</a>.
+          For commissions, commercial licensing, or general questions — drop a message below or email me directly at <a href="mailto:hello@lifeframestudio.com" style={{ color: "#0ea5e9", textDecoration: "none" }}>hello@lifeframestudio.com</a>.
         </p>
         <div style={{ background: "#fff", border: "0.5px solid #e0e0e0", borderRadius: 14, padding: "1.5rem" }}>
           <div style={label}>Your name</div>
