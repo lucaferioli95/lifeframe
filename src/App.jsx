@@ -14,6 +14,13 @@ const SAMPLE_PHOTOS = [
 ];
 
 const ADMIN_EMAIL = "admin@lifeframe.com";
+
+// ─── LAUNCH SWITCH ───────────────────────────────────────────────
+// Set to false to make the site public. While true, visitors see a
+// "Launching soon" page. You can still access the full site at:
+//   https://lifeframestudio.com/?preview=lifeframe
+const COMING_SOON = true;
+// ─────────────────────────────────────────────────────────────────
 const SYMBOLS = { GBP: "£", USD: "$", EUR: "€" };
 
 export default function App() {
@@ -870,6 +877,26 @@ const permanentDelete = async (photo) => {
       </div>
       <p style={{ margin: 0 }}>© {new Date().getFullYear()} LifeFrame. All photographs are the copyright of the photographer. Personal use only — no resale, no commercial reproduction without permission.</p>
     </footer>
+  );
+
+  if (COMING_SOON && new URLSearchParams(window.location.search).get("preview") !== "lifeframe") return (
+    <div style={{ fontFamily: '"Elms Sans", system-ui, sans-serif', minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "2rem", background: "#111", color: "#fff" }}>
+      <svg width={64} height={64} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{ display: "block", marginBottom: 28 }}>
+        <circle cx="50" cy="50" r="48" fill="#fafafa" />
+        <g transform="translate(50,50)" stroke="#111" strokeWidth="1.4" strokeLinejoin="round">
+          <path d="M0 -46 L36 -28 L12 -6 L0 -20 Z" fill="#fafafa" />
+          <g transform="rotate(60)"><path d="M0 -46 L36 -28 L12 -6 L0 -20 Z" fill="#e0e0e0" /></g>
+          <g transform="rotate(120)"><path d="M0 -46 L36 -28 L12 -6 L0 -20 Z" fill="#fafafa" /></g>
+          <g transform="rotate(180)"><path d="M0 -46 L36 -28 L12 -6 L0 -20 Z" fill="#e0e0e0" /></g>
+          <g transform="rotate(240)"><path d="M0 -46 L36 -28 L12 -6 L0 -20 Z" fill="#fafafa" /></g>
+          <g transform="rotate(300)"><path d="M0 -46 L36 -28 L12 -6 L0 -20 Z" fill="#e0e0e0" /></g>
+        </g>
+      </svg>
+      <p style={{ fontSize: 13, letterSpacing: 3, color: "#7dd3fc", textTransform: "uppercase", marginBottom: 18 }}>LifeFrame</p>
+      <h1 style={{ fontSize: 40, fontWeight: 700, letterSpacing: -1.5, margin: "0 0 18px", lineHeight: 1.2, maxWidth: 600 }}>Something beautiful is coming.</h1>
+      <p style={{ fontSize: 16, color: "rgba(255,255,255,0.75)", maxWidth: 420, lineHeight: 1.7, margin: "0 0 32px" }}>An original photography collection — moments captured, yours to keep. Launching soon.</p>
+      <a href="mailto:hello@lifeframestudio.com" style={{ fontSize: 14, color: "#7dd3fc", textDecoration: "none", borderBottom: "1px solid rgba(125,211,252,0.4)", paddingBottom: 2 }}>hello@lifeframestudio.com</a>
+    </div>
   );
 
   if (view === "terms") return (
