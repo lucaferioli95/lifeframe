@@ -109,6 +109,26 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    const restoreSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+      const authedEmail = session.user.email;
+      const admin = authedEmail === ADMIN_EMAIL;
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+      const { data: purchaseRows } = await supabase.from('purchases').select('photo_id').eq('user_id', session.user.id);
+      const purchasedIds = (purchaseRows || []).map(r => r.photo_id);
+      setUser({
+        name: profile?.name || authedEmail.split('@')[0],
+        email: authedEmail,
+        role: admin ? 'admin' : 'user',
+        purchases: purchasedIds,
+        favourites: profile?.favourites || [],
+      });
+    };
+    restoreSession();
+  }, []);
+
 useEffect(() => {
   const loadSales = async () => {
     const { data, error } = await supabase.from('purchases').select('photo_id');
@@ -266,6 +286,17 @@ useEffect(() => {
         console.error(e);
       }
     }
+    const ctx = sessionStorage.getItem('purchaseContext');
+    if (ctx) {
+      try {
+        const parsed = JSON.parse(ctx);
+        setIsGuest(!!parsed.isGuest);
+        setGuestEmail(parsed.guestEmail || "");
+        sessionStorage.removeItem('purchaseContext');
+      } catch (e) {
+        console.error(e);
+      }
+    }
     setPayDone(true);
     setView('checkout');
     notify('Payment successful! 🎉');
@@ -308,6 +339,7 @@ const handlePay = async () => {
 
   // Save the items locally so we can show them on the success page
   sessionStorage.setItem('purchasedItems', JSON.stringify(cartPhotos));
+  sessionStorage.setItem('purchaseContext', JSON.stringify({ isGuest, guestEmail }));
 
   try {
     const { data, error } = await supabase.functions.invoke('create-checkout-session', {
@@ -1276,8 +1308,8 @@ const permanentDelete = async (photo) => {
                 </div>
               ))}
             </div>
-            {!isGuest && <div style={{ textAlign: "center" }}><button style={btn} onClick={() => setView("library")}>Go to my library</button></div>}
-            {isGuest && <div style={{ textAlign: "center" }}><button style={btn} onClick={() => setView("gallery")}>Back to gallery</button></div>}
+            {user && <div style={{ textAlign: "center" }}><button style={btn} onClick={() => setView("library")}>Go to my library</button></div>}
+            {!user && <div style={{ textAlign: "center" }}><button style={btn} onClick={() => setView("gallery")}>Back to gallery</button></div>}
           </div>
         ) : (
           <>
