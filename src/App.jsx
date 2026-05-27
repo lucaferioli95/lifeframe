@@ -1263,9 +1263,13 @@ const permanentDelete = async (photo) => {
                 {user
                   ? <button style={{ ...btnPri, width: "100%", padding: "13px", fontSize: 15 }} onClick={() => handleCheckout(false)}>Checkout</button>
                   : <>
-                      <button style={{ ...btnPri, width: "100%", padding: "13px", fontSize: 15, background: "#0ea5e9" }} onClick={() => { setAuthMode("login"); setView("auth"); }}>Log in to checkout</button>
-                      <button style={{ ...btnPri, width: "100%", padding: "13px", fontSize: 15, background: "#fff", color: "#111", border: "0.5px solid #ccc" }} onClick={() => handleCheckout(true)}>Continue as guest</button>
-                      <p style={{ fontSize: 12, color: "#aaa", textAlign: "center", margin: 0 }}>Guest checkout — download links sent to your email after payment</p>
+                      <div style={{ background: "#f0f9ff", border: "0.5px solid #bae6fd", borderRadius: 10, padding: "12px 14px", marginBottom: 4, fontSize: 13, color: "#0369a1", lineHeight: 1.6 }}>
+                        <strong style={{ color: "#075985" }}>✨ Create a free account</strong> and your photos stay in your library forever — re-download anytime, on any device. Guest download links expire after 7 days.
+                      </div>
+                      <button style={{ ...btnPri, width: "100%", padding: "13px", fontSize: 15, background: "#0ea5e9" }} onClick={() => { setAuthMode("signup"); setView("auth"); }}>Create account &amp; checkout</button>
+                      <button style={{ ...btnPri, width: "100%", padding: "13px", fontSize: 15, background: "#fff", color: "#111", border: "0.5px solid #ccc" }} onClick={() => { setAuthMode("login"); setView("auth"); }}>Log in</button>
+                      <button style={{ background: "none", border: "none", cursor: "pointer", color: "#888", fontSize: 13, textDecoration: "underline", padding: "4px 0" }} onClick={() => handleCheckout(true)}>Continue as guest instead</button>
+                      <p style={{ fontSize: 12, color: "#aaa", textAlign: "center", margin: 0 }}>Guest checkout — download links sent to your email, valid 7 days</p>
                     </>}
               </div>
             </>}
@@ -1291,7 +1295,7 @@ const permanentDelete = async (photo) => {
                 <span style={{ fontSize: 20 }}>📧</span>
                 <div style={{ flex: 1 }}>
                   <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#0369a1" }}>Email with download links sent</p>
-                  <p style={{ margin: "3px 0 0", fontSize: 12, color: "#0c4a6e" }}>Check your inbox at <strong>{guestEmail}</strong>. The links don't expire.</p>
+                  <p style={{ margin: "3px 0 0", fontSize: 12, color: "#0c4a6e" }}>Check your inbox at <strong>{guestEmail}</strong>. The download links stay active for 7 days.</p>
                 </div>
               </div>
             )}
