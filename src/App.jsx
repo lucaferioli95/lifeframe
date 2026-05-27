@@ -915,8 +915,10 @@ const permanentDelete = async (photo) => {
     COMING_SOON
     && new URLSearchParams(window.location.search).get("preview") !== "lifeframe"
     && !new URLSearchParams(window.location.search).get("code")
+    && !new URLSearchParams(window.location.search).get("payment")
     && !/access_token|type=(recovery|email_change|signup|magiclink)/.test(window.location.hash)
     && view !== "resetPassword"
+    && view !== "checkout"
   ) return (
     <div style={{ fontFamily: '"Elms Sans", system-ui, sans-serif', minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "2rem", background: "#111", color: "#fff" }}>
       <svg width={64} height={64} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{ display: "block", marginBottom: 28 }}>
