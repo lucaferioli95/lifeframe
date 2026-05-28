@@ -23,6 +23,54 @@ const COMING_SOON = true;
 // ─────────────────────────────────────────────────────────────────
 const SYMBOLS = { GBP: "£", USD: "$", EUR: "€" };
 
+// Generate a downscaled, watermarked preview JPEG from an image File.
+// Used for public display so the full-resolution original is never exposed.
+async function makePreview(file, maxEdge = 1600) {
+  const dataUrl = await new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+  const img = await new Promise((res, rej) => {
+    const i = new Image();
+    i.onload = () => res(i);
+    i.onerror = rej;
+    i.src = dataUrl;
+  });
+  let width = img.width, height = img.height;
+  const scale = Math.min(1, maxEdge / Math.max(width, height));
+  width = Math.round(width * scale);
+  height = Math.round(height * scale);
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, width, height);
+
+  // Repeated diagonal watermark
+  ctx.save();
+  ctx.translate(width / 2, height / 2);
+  ctx.rotate(-Math.PI / 6);
+  const fontSize = Math.max(16, Math.round(width / 30));
+  ctx.font = `600 ${fontSize}px system-ui, -apple-system, sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.30)';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const text = '© LifeFrame';
+  const stepX = fontSize * 11;
+  const stepY = fontSize * 6;
+  const diag = Math.sqrt(width * width + height * height);
+  for (let y = -diag; y < diag; y += stepY) {
+    for (let x = -diag; x < diag; x += stepX) {
+      ctx.fillText(text, x, y);
+    }
+  }
+  ctx.restore();
+
+  return await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.82));
+}
+
 export default function App() {
   const [photos, setPhotos] = useState([]);
   const [view, setView] = useState("home");
@@ -44,6 +92,7 @@ export default function App() {
   const [isGuest, setIsGuest] = useState(false);
   const [payAttempted, setPayAttempted] = useState(false);
   const [purchasedItems, setPurchasedItems] = useState([]);
+  const [purchaseSessionId, setPurchaseSessionId] = useState(null);
   const [lightbox, setLightbox] = useState(false);
   const [zoomActive, setZoomActive] = useState(false);
   const [zoomOrigin, setZoomOrigin] = useState({ x: 50, y: 50 });
@@ -285,6 +334,7 @@ useEffect(() => {
   const payment = params.get('payment');
   const sessionId = params.get('session_id');
   if (payment === 'success' && sessionId) {
+    setPurchaseSessionId(sessionId);
     const stored = sessionStorage.getItem('purchasedItems');
     if (stored) {
       try {
@@ -372,22 +422,18 @@ const handlePay = async () => {
   }
 };
 
-const downloadPhoto = async (photo) => {
-  if (!photo.storage_path) {
-    notify('Download unavailable for this photo.');
-    return;
+const downloadPhoto = async (photo, sessionId = null) => {
+  try {
+    const body = { photoId: photo.id };
+    if (sessionId) body.sessionId = sessionId;
+    const { data, error } = await supabase.functions.invoke('get-download', { body });
+    if (error) throw error;
+    if (!data?.url) throw new Error(data?.error || 'No download URL returned');
+    window.location.href = data.url;
+  } catch (err) {
+    console.error('Download error:', err);
+    notify('Could not generate download link. Please try again or contact support.');
   }
-  const ext = photo.storage_path.split('.').pop() || 'jpg';
-  const safeName = (photo.title || 'photo').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-') || 'photo';
-  const { data, error } = await supabase.storage
-    .from('photos')
-    .createSignedUrl(photo.storage_path, 60 * 60, { download: `${safeName}.${ext}` });
-  if (error || !data?.signedUrl) {
-    notify('Could not generate download link.');
-    console.error('Download error:', error);
-    return;
-  }
-  window.location.href = data.signedUrl;
 };
 
 const toggleHero = async (photoId, currentValue) => {
@@ -575,11 +621,13 @@ const handleSendContact = async () => {
   setUploadDone(false);
   notify("Uploading photo...");
 
-  // 1. Upload the image file to Supabase Storage
+  // Paths: original in private "photos" bucket, preview in public "previews" bucket
+  const ts = Date.now();
   const fileExt = uploadForm.file.name.split('.').pop();
-  const fileName = `${Date.now()}.${fileExt}`;
-  const filePath = `gallery/${fileName}`;
+  const filePath = `gallery/${ts}.${fileExt}`;
+  const previewPath = `${filePath}.preview.jpg`;
 
+  // 1. Upload the ORIGINAL full-res file to the private "photos" bucket
   const { error: uploadError } = await supabase.storage
     .from('photos')
     .upload(filePath, uploadForm.file);
@@ -590,13 +638,27 @@ const handleSendContact = async () => {
     return;
   }
 
-  // 2. Get the public URL of the uploaded image
-  const { data: urlData } = supabase.storage
-    .from('photos')
-    .getPublicUrl(filePath);
-  const publicUrl = urlData.publicUrl;
+  // 2. Generate a watermarked, downscaled preview and upload to the public "previews" bucket
+  let publicUrl = '';
+  try {
+    const previewBlob = await makePreview(uploadForm.file, 1600);
+    const { error: prevErr } = await supabase.storage
+      .from('previews')
+      .upload(previewPath, previewBlob, { contentType: 'image/jpeg' });
+    if (prevErr) {
+      console.error('Preview upload error:', prevErr);
+      notify("Preview upload failed: " + prevErr.message);
+      return;
+    }
+    const { data: prevUrlData } = supabase.storage.from('previews').getPublicUrl(previewPath);
+    publicUrl = prevUrlData.publicUrl;
+  } catch (err) {
+    console.error('Preview generation failed:', err);
+    notify("Could not generate preview image.");
+    return;
+  }
 
-  // 3. Save the metadata to the photos table
+  // 3. Save the metadata to the photos table (display uses the preview URL; downloads use storage_path)
   const { data: insertedPhoto, error: insertError } = await supabase
     .from('photos')
     .insert({
@@ -790,6 +852,7 @@ const permanentDelete = async (photo) => {
   if (dbErr) { notify('Could not delete: ' + dbErr.message); return; }
   if (photo.storage_path) {
     await supabase.storage.from('photos').remove([photo.storage_path]);
+    await supabase.storage.from('previews').remove([photo.storage_path + '.preview.jpg']);
   }
   setPhotos(prev => prev.filter(p => p.id !== photo.id));
   notify('Photo deleted permanently.');
@@ -1342,7 +1405,7 @@ const permanentDelete = async (photo) => {
                     <p style={{ margin: 0, fontSize: 14, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.title}</p>
                     <p style={{ margin: "2px 0 0", fontSize: 11, color: "#888" }}>Full resolution · High quality</p>
                   </div>
-                  <button type="button" onClick={() => downloadPhoto(p)} style={{ ...btnPri, fontSize: 13, padding: "7px 14px", whiteSpace: "nowrap" }}>↓ Download</button>
+                  <button type="button" onClick={() => downloadPhoto(p, purchaseSessionId)} style={{ ...btnPri, fontSize: 13, padding: "7px 14px", whiteSpace: "nowrap" }}>↓ Download</button>
                 </div>
               ))}
             </div>
