@@ -25,7 +25,7 @@ const SYMBOLS = { GBP: "£", USD: "$", EUR: "€" };
 
 // Generate a downscaled, watermarked preview JPEG from an image File.
 // Used for public display so the full-resolution original is never exposed.
-async function makePreview(file, maxEdge = 1600) {
+async function makePreview(file, maxEdge = 1600, watermark = true) {
   const dataUrl = await new Promise((res, rej) => {
     const r = new FileReader();
     r.onload = () => res(r.result);
@@ -48,25 +48,27 @@ async function makePreview(file, maxEdge = 1600) {
   const ctx = canvas.getContext('2d');
   ctx.drawImage(img, 0, 0, width, height);
 
-  // Repeated diagonal watermark
-  ctx.save();
-  ctx.translate(width / 2, height / 2);
-  ctx.rotate(-Math.PI / 6);
-  const fontSize = Math.max(16, Math.round(width / 30));
-  ctx.font = `600 ${fontSize}px system-ui, -apple-system, sans-serif`;
-  ctx.fillStyle = 'rgba(255,255,255,0.30)';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  const text = '© LifeFrame';
-  const stepX = fontSize * 11;
-  const stepY = fontSize * 6;
-  const diag = Math.sqrt(width * width + height * height);
-  for (let y = -diag; y < diag; y += stepY) {
-    for (let x = -diag; x < diag; x += stepX) {
-      ctx.fillText(text, x, y);
+  // Repeated diagonal watermark (optional)
+  if (watermark) {
+    ctx.save();
+    ctx.translate(width / 2, height / 2);
+    ctx.rotate(-Math.PI / 6);
+    const fontSize = Math.max(16, Math.round(width / 30));
+    ctx.font = `600 ${fontSize}px system-ui, -apple-system, sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.30)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const text = '© LifeFrame';
+    const stepX = fontSize * 11;
+    const stepY = fontSize * 6;
+    const diag = Math.sqrt(width * width + height * height);
+    for (let y = -diag; y < diag; y += stepY) {
+      for (let x = -diag; x < diag; x += stepX) {
+        ctx.fillText(text, x, y);
+      }
     }
+    ctx.restore();
   }
-  ctx.restore();
 
   return await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.82));
 }
@@ -621,10 +623,11 @@ const handleSendContact = async () => {
   setUploadDone(false);
   notify("Uploading photo...");
 
-  // Paths: original in private "photos" bucket, preview in public "previews" bucket
+  // Paths: original in private "photos" bucket, previews in public "previews" bucket
   const ts = Date.now();
   const fileExt = uploadForm.file.name.split('.').pop();
   const filePath = `gallery/${ts}.${fileExt}`;
+  const thumbPath = `${filePath}.thumb.jpg`;
   const previewPath = `${filePath}.preview.jpg`;
 
   // 1. Upload the ORIGINAL full-res file to the private "photos" bucket
@@ -638,27 +641,28 @@ const handleSendContact = async () => {
     return;
   }
 
-  // 2. Generate a watermarked, downscaled preview and upload to the public "previews" bucket
-  let publicUrl = '';
+  // 2. Generate TWO watermarked images and upload to the public "previews" bucket:
+  //    - thumb (800px) for fast gallery/grid display
+  //    - preview (full-res) for the high-quality zoom view
+  let thumbUrl = '', previewUrl = '';
   try {
-    const previewBlob = await makePreview(uploadForm.file, 1600);
-    const { error: prevErr } = await supabase.storage
-      .from('previews')
-      .upload(previewPath, previewBlob, { contentType: 'image/jpeg' });
-    if (prevErr) {
-      console.error('Preview upload error:', prevErr);
-      notify("Preview upload failed: " + prevErr.message);
-      return;
-    }
-    const { data: prevUrlData } = supabase.storage.from('previews').getPublicUrl(previewPath);
-    publicUrl = prevUrlData.publicUrl;
+    const thumbBlob = await makePreview(uploadForm.file, 1200, false); // clean, for grid + hero
+    const previewBlob = await makePreview(uploadForm.file, 6000, true); // watermarked, full-res, for zoom
+
+    const up1 = await supabase.storage.from('previews').upload(thumbPath, thumbBlob, { contentType: 'image/jpeg' });
+    if (up1.error) { console.error(up1.error); notify("Preview upload failed: " + up1.error.message); return; }
+    const up2 = await supabase.storage.from('previews').upload(previewPath, previewBlob, { contentType: 'image/jpeg' });
+    if (up2.error) { console.error(up2.error); notify("Preview upload failed: " + up2.error.message); return; }
+
+    thumbUrl = supabase.storage.from('previews').getPublicUrl(thumbPath).data.publicUrl;
+    previewUrl = supabase.storage.from('previews').getPublicUrl(previewPath).data.publicUrl;
   } catch (err) {
     console.error('Preview generation failed:', err);
-    notify("Could not generate preview image.");
+    notify("Could not generate preview images.");
     return;
   }
 
-  // 3. Save the metadata to the photos table (display uses the preview URL; downloads use storage_path)
+  // 3. Save the metadata (thumb_url = small grid image; full_url = full-res watermarked zoom image; storage_path = private original)
   const { data: insertedPhoto, error: insertError } = await supabase
     .from('photos')
     .insert({
@@ -674,8 +678,8 @@ const handleSendContact = async () => {
       focal_length: uploadForm.focal_length || null,
       date_taken: uploadForm.date_taken || null,
       dimensions: uploadForm.dimensions || null,
-      thumb_url: publicUrl,
-      full_url: publicUrl,
+      thumb_url: thumbUrl,
+      full_url: previewUrl,
       storage_path: filePath,
     })
     .select()
@@ -852,7 +856,7 @@ const permanentDelete = async (photo) => {
   if (dbErr) { notify('Could not delete: ' + dbErr.message); return; }
   if (photo.storage_path) {
     await supabase.storage.from('photos').remove([photo.storage_path]);
-    await supabase.storage.from('previews').remove([photo.storage_path + '.preview.jpg']);
+    await supabase.storage.from('previews').remove([photo.storage_path + '.thumb.jpg', photo.storage_path + '.preview.jpg']);
   }
   setPhotos(prev => prev.filter(p => p.id !== photo.id));
   notify('Photo deleted permanently.');
@@ -1152,7 +1156,7 @@ const permanentDelete = async (photo) => {
           {heroes.map((p, i) => (
             <img
               key={p.id}
-              src={p.img}
+              src={p.thumb}
               alt=""
               style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: i === (heroIndex % heroes.length) ? 1 : 0, transition: "opacity 1.2s ease" }}
             />
@@ -1262,7 +1266,7 @@ const permanentDelete = async (photo) => {
                 onContextMenu={e => e.preventDefault()}
                 style={{ position: "relative", maxWidth: "90vw", maxHeight: "90vh", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", cursor: zoomActive ? "zoom-out" : "zoom-in" }}
               >
-                <img src={selected.thumb} alt={selected.title} draggable={false} style={{ maxWidth: "90vw", maxHeight: "90vh", objectFit: "contain", borderRadius: 4, userSelect: "none", pointerEvents: "none", transform: zoomActive ? "scale(2.5)" : "scale(1)", transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`, transition: "transform 0.3s ease" }} />
+                <img src={selected.img} alt={selected.title} draggable={false} style={{ maxWidth: "90vw", maxHeight: "90vh", objectFit: "contain", borderRadius: 4, userSelect: "none", pointerEvents: "none", transform: zoomActive ? "scale(2.5)" : "scale(1)", transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`, transition: "transform 0.3s ease" }} />
                 <span style={{ position: "absolute", bottom: "8%", right: "6%", fontSize: 28, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: 3, textShadow: "0 2px 8px rgba(0,0,0,0.6)", pointerEvents: "none", userSelect: "none" }}>© LifeFrame</span>
                 <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%) rotate(-30deg)", fontSize: 56, fontWeight: 700, color: "rgba(255,255,255,0.12)", letterSpacing: 8, pointerEvents: "none", userSelect: "none", whiteSpace: "nowrap" }}>© LIFEFRAME PREVIEW</span>
               </div>
