@@ -34,6 +34,7 @@ export default function App() {
   const [authForm, setAuthForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [showPass, setShowPass] = useState(false);
   const [authErr, setAuthErr] = useState("");
+  const [authInfo, setAuthInfo] = useState("");
   const [payTab, setPayTab] = useState("card");
   const [cardForm, setCardForm] = useState({ name: "", number: "", expiry: "", cvv: "" });
   const [paypalEmail, setPaypalEmail] = useState("");
@@ -233,6 +234,9 @@ is_hero: p.is_hero,
   const categories = ["All", ...topLevelCats.map(c => c.name)];
 const publicPhotos = photos.filter(p => !p.is_retired);
   const filteredPhotos = filterCat === "All" ? publicPhotos : publicPhotos.filter(p => p.category === filterCat || (p.category && p.category.startsWith(filterCat + " > ")));
+  const activeParent = filterCat === "All" ? null : filterCat.split(" > ")[0];
+  const activeParentObj = topLevelCats.find(c => c.name === activeParent);
+  const subCats = activeParentObj ? categoryList.filter(c => c.parent_id === activeParentObj.id) : [];
   const cartPhotos = photos.filter(p => cart.includes(p.id));
   const cartTotal = cartPhotos.reduce((sum, p) => sum + p.price, 0);
   const userPurchases = photos.filter(p => user && user.purchases && user.purchases.includes(p.id));
@@ -445,7 +449,8 @@ setUser({
       // Email confirmation is required — no active session until they confirm
       setAuthMode("login");
       setAuthErr("");
-      notify("Account created! Check your email and click the confirmation link before logging in.");
+      setAuthInfo("📧 Confirmation email sent to " + authForm.email + ". Click the link in it to activate your account, then log in.");
+      notify("Confirmation email sent — check your inbox.");
     } else {
       // Confirmation disabled — logged in immediately
       setUser({
@@ -1105,15 +1110,29 @@ const permanentDelete = async (photo) => {
     <div style={page}>
       <NavBar />
       {notification && <div style={toast}>{notification}</div>}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 1.5rem", marginBottom: 20, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", flex: 1 }}>
-          {categories.map(c => <button key={c} style={pill(filterCat === c)} onClick={() => setFilterCat(c)}>{c}</button>)}
+      <div style={{ padding: "0 1.5rem", marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", flex: 1 }}>
+            {categories.map(c => {
+              const isActive = c === "All" ? filterCat === "All" : activeParent === c;
+              return <button key={c} style={pill(isActive)} onClick={() => setFilterCat(c)}>{c}</button>;
+            })}
+          </div>
+          <select value={currency} onChange={e => setCurrency(e.target.value)} style={{ padding: "5px 10px", borderRadius: 20, border: "0.5px solid #ddd", fontSize: 12, cursor: "pointer", background: "#fff", color: "#555" }}>
+            <option value="GBP">£ GBP</option>
+            <option value="USD">$ USD</option>
+            <option value="EUR">€ EUR</option>
+          </select>
         </div>
-        <select value={currency} onChange={e => setCurrency(e.target.value)} style={{ padding: "5px 10px", borderRadius: 20, border: "0.5px solid #ddd", fontSize: 12, cursor: "pointer", background: "#fff", color: "#555" }}>
-          <option value="GBP">£ GBP</option>
-          <option value="USD">$ USD</option>
-          <option value="EUR">€ EUR</option>
-        </select>
+        {subCats.length > 0 && (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10, paddingLeft: 4 }}>
+            <button style={pill(filterCat === activeParent)} onClick={() => setFilterCat(activeParent)}>All {activeParent}</button>
+            {subCats.map(s => {
+              const path = activeParent + " > " + s.name;
+              return <button key={s.id} style={pill(filterCat === path)} onClick={() => setFilterCat(path)}>{s.name}</button>;
+            })}
+          </div>
+        )}
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 20, padding: "0 1.5rem" }}>
         {filteredPhotos.map(p => {
@@ -1267,6 +1286,9 @@ const permanentDelete = async (photo) => {
                   <span style={{ fontWeight: 600, fontSize: 15 }}>Total</span>
                   <span style={{ fontWeight: 700, fontSize: 18 }}>{sym}{convert(cartTotal)}</span>
                 </div>
+                {currency !== "GBP" && (
+                  <p style={{ fontSize: 11, color: "#888", textAlign: "right", margin: "6px 0 0" }}>≈ converted estimate · charged in GBP (£{cartTotal.toFixed(2)})</p>
+                )}
               </div>
               <div style={{ background: "#fef2f2", border: "0.5px solid #fecaca", borderRadius: 10, padding: "10px 14px", marginBottom: 16, fontSize: 12, color: "#991b1b", lineHeight: 1.6 }}>
                 <strong style={{ color: "#7f1d1d" }}>Personal use only.</strong> Purchases are licensed for personal use (e.g. personal prints, wallpapers). For commercial use or licensing, please <button onClick={() => setView("contact")} style={{ background: "none", border: "none", color: "#0ea5e9", padding: 0, cursor: "pointer", fontSize: 12, fontWeight: 600 }}>get in touch</button>.
@@ -1340,6 +1362,9 @@ const permanentDelete = async (photo) => {
                 <span style={{ fontWeight: 600 }}>Total</span>
                 <span style={{ fontWeight: 700, fontSize: 16 }}>{sym}{convert(cartTotal)}</span>
               </div>
+              {currency !== "GBP" && (
+                <p style={{ fontSize: 11, color: "#888", textAlign: "right", margin: "6px 0 0" }}>≈ estimate · you'll be charged £{cartTotal.toFixed(2)} GBP</p>
+              )}
             </div>
             {isGuest && (
               <div style={{ marginBottom: 20 }}>
@@ -1358,7 +1383,7 @@ const permanentDelete = async (photo) => {
 
          <div style={{ background: "#f0f9ff", border: "0.5px solid #bae6fd", borderRadius: 10, padding: "12px 14px", fontSize: 13, color: "#0369a1", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 16 }}>🔒</span>
-              <span>You'll be redirected to Stripe to complete your payment securely. Cards and Apple Pay / Google Pay are supported.</span>
+              <span>You'll be redirected to Stripe to pay securely in GBP. Cards and Apple Pay / Google Pay are supported.</span>
             </div>
             <button style={{ ...btnPri, width: "100%", padding: "13px", fontSize: 15 }} onClick={handlePay} disabled={paying}>
               {paying ? "Redirecting to checkout..." : "Continue to checkout · " + sym + convert(cartTotal)}
@@ -1376,8 +1401,8 @@ const permanentDelete = async (photo) => {
       <div style={{ maxWidth: 400, margin: "2rem auto", padding: "0 1.5rem" }}>
         <div style={{ background: "#fff", border: "0.5px solid #e0e0e0", borderRadius: 14, padding: "2rem" }}>
           <div style={{ display: "flex", borderBottom: "0.5px solid #e0e0e0", marginBottom: 24 }}>
-            <button style={tabSty(authMode === "login")} onClick={() => { setAuthMode("login"); setAuthErr(""); }}>Log in</button>
-            <button style={tabSty(authMode === "signup")} onClick={() => { setAuthMode("signup"); setAuthErr(""); }}>Create account</button>
+            <button style={tabSty(authMode === "login")} onClick={() => { setAuthMode("login"); setAuthErr(""); setAuthInfo(""); }}>Log in</button>
+            <button style={tabSty(authMode === "signup")} onClick={() => { setAuthMode("signup"); setAuthErr(""); setAuthInfo(""); }}>Create account</button>
           </div>
           {authMode === "signup" && <><div style={label}>Name</div><input style={input} placeholder="Jane Smith" value={authForm.name} onChange={e => setAuthForm(f => ({ ...f, name: e.target.value }))} /></>}
           <div style={label}>Email</div>
@@ -1405,18 +1430,19 @@ const permanentDelete = async (photo) => {
               )}
             </>
           )}
+          {authInfo && <p style={{ background: "#f0fdf4", border: "0.5px solid #bbf7d0", color: "#15803d", fontSize: 13, lineHeight: 1.6, margin: "0 0 12px", padding: "10px 12px", borderRadius: 8 }}>{authInfo}</p>}
           {authErr && <p style={{ color: "#c00", fontSize: 13, margin: "0 0 12px" }}>{authErr}</p>}
           <button style={{ ...btnPri, width: "100%", padding: "11px" }} onClick={handleAuth}>{authMode === "login" ? "Log in" : "Create account"}</button>
           {authMode === "login" && (
             <p style={{ textAlign: "center", fontSize: 13, color: "#666", margin: "16px 0 0" }}>
               Don't have an account?{" "}
-              <button onClick={() => { setAuthMode("signup"); setAuthErr(""); }} style={{ background: "none", border: "none", color: "#0ea5e9", fontWeight: 600, cursor: "pointer", padding: 0, fontSize: 13 }}>Join now</button>
+              <button onClick={() => { setAuthMode("signup"); setAuthErr(""); setAuthInfo(""); }} style={{ background: "none", border: "none", color: "#0ea5e9", fontWeight: 600, cursor: "pointer", padding: 0, fontSize: 13 }}>Join now</button>
             </p>
           )}
           {authMode === "signup" && (
             <p style={{ textAlign: "center", fontSize: 13, color: "#666", margin: "16px 0 0" }}>
               Already have an account?{" "}
-              <button onClick={() => { setAuthMode("login"); setAuthErr(""); }} style={{ background: "none", border: "none", color: "#0ea5e9", fontWeight: 600, cursor: "pointer", padding: 0, fontSize: 13 }}>Log in</button>
+              <button onClick={() => { setAuthMode("login"); setAuthErr(""); setAuthInfo(""); }} style={{ background: "none", border: "none", color: "#0ea5e9", fontWeight: 600, cursor: "pointer", padding: 0, fontSize: 13 }}>Log in</button>
             </p>
           )}
         </div>
