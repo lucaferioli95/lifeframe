@@ -105,6 +105,10 @@ export default function App() {
         notify('Email address updated successfully.');
         window.history.replaceState({}, '', window.location.pathname);
       }
+      if (event === 'SIGNED_IN' && /type=signup/.test(window.location.hash)) {
+        notify('Email confirmed — welcome to LifeFrame!');
+        window.history.replaceState({}, '', window.location.pathname);
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -437,15 +441,23 @@ setUser({
       options: { data: { name: authForm.name } },
     });
     if (error) { setAuthErr(error.message); return; }
-    setUser({
-      name: authForm.name,
-      email: authForm.email,
-      role: 'user',
-      purchases: [],
-      favourites: [],
-    });
-    setView("gallery");
-    notify("Account created! Welcome, " + authForm.name + "!");
+    if (!data.session) {
+      // Email confirmation is required — no active session until they confirm
+      setAuthMode("login");
+      setAuthErr("");
+      notify("Account created! Check your email and click the confirmation link before logging in.");
+    } else {
+      // Confirmation disabled — logged in immediately
+      setUser({
+        name: authForm.name,
+        email: authForm.email,
+        role: 'user',
+        purchases: [],
+        favourites: [],
+      });
+      setView("gallery");
+      notify("Account created! Welcome, " + authForm.name + "!");
+    }
   }
   setAuthForm({ name: "", email: "", password: "", confirmPassword: "" });
 };
