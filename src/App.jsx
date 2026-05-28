@@ -1140,9 +1140,9 @@ const permanentDelete = async (photo) => {
           const inCart = cart.includes(p.id);
           const isFav = user && user.favourites && user.favourites.includes(p.id);
           return (
-            <div key={p.id} style={{ borderRadius: 10, border: "0.5px solid #e0e0e0", overflow: "hidden", background: "#fff", cursor: "pointer" }} onClick={() => { setSelected(p); setView("detail"); }}>
+            <div key={p.id} style={{ borderRadius: 10, border: "0.5px solid #e0e0e0", overflow: "hidden", background: "#fff", cursor: "pointer" }} onClick={() => { setSelected(p); setView("detail"); }} onContextMenu={e => e.preventDefault()}>
               <div style={{ position: "relative", width: "100%", paddingTop: "75%", background: "#f0f0f0" }}>
-                <img src={p.thumb} alt="" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                <img src={p.thumb} alt="" draggable={false} style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", display: "block", userSelect: "none", pointerEvents: "none" }} />
                 <span style={{ position: "absolute", top: 10, left: 10, background: "rgba(0,0,0,0.7)", color: "#fff", fontSize: 12, fontWeight: 600, padding: "4px 10px", borderRadius: 20 }}>{sym}{convert(p.price)}</span>
                 {user && (
                   <button onClick={e => toggleFavourite(p.id, e)} style={{ position: "absolute", top: 8, right: 8, width: 30, height: 30, borderRadius: "50%", border: "none", background: "rgba(255,255,255,0.9)", cursor: "pointer", fontSize: 15, color: isFav ? "#e11d48" : "#888", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }} title={isFav ? "Remove from favourites" : "Add to favourites"}>
@@ -1564,9 +1564,9 @@ const permanentDelete = async (photo) => {
                 const isFav = user.favourites && user.favourites.includes(p.id);
                 return (
                   <div key={p.id} style={{ borderRadius: 12, border: "0.5px solid #e0e0e0", overflow: "hidden", background: "#fff", display: "flex", flexDirection: "column" }}>
-                    <div style={{ position: "relative" }}>
-                      <img src={p.thumb} alt={p.title} style={{ width: "100%", aspectRatio: "4/3", objectFit: "cover", display: "block" }} />
-                      <button onClick={() => toggleFavourite(p.id)} style={{ position: "absolute", top: 8, right: 8, width: 30, height: 30, borderRadius: "50%", border: "none", background: "rgba(255,255,255,0.9)", cursor: "pointer", fontSize: 15, color: isFav ? "#e11d48" : "#888", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>{isFav ? "♥" : "♡"}</button>
+                    <div style={{ position: "relative", cursor: "pointer" }} onClick={() => { setSelected(p); setView("detail"); }} onContextMenu={e => e.preventDefault()}>
+                      <img src={p.thumb} alt={p.title} draggable={false} style={{ width: "100%", aspectRatio: "4/3", objectFit: "cover", display: "block", userSelect: "none", pointerEvents: "none" }} />
+                      <button onClick={e => toggleFavourite(p.id, e)} style={{ position: "absolute", top: 8, right: 8, width: 30, height: 30, borderRadius: "50%", border: "none", background: "rgba(255,255,255,0.9)", cursor: "pointer", fontSize: 15, color: isFav ? "#e11d48" : "#888", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>{isFav ? "♥" : "♡"}</button>
                     </div>
                     <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
