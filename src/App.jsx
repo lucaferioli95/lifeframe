@@ -972,14 +972,14 @@ const permanentDelete = async (photo) => {
             )}
           </div>
           <div style={{ display: isVeryNarrow ? "none" : "flex", alignItems: "center", gap: 8, cursor: "pointer", position: "absolute", left: "50%", transform: "translateX(-50%)" }} onClick={() => setView("home")}>
-            <Logo size={26} />
+            <Logo size={32} />
             <span style={{ fontWeight: 700, fontSize: 22, letterSpacing: -0.5 }}>LifeFrame</span>
           </div>
         </>
       ) : (
         <>
           <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }} onClick={() => setView("home")}>
-            <Logo size={isWide ? 32 : 26} />
+            <Logo size={isWide ? 42 : 32} />
             <span style={{ fontWeight: 700, fontSize: isWide ? 28 : 22, letterSpacing: -0.5 }}>LifeFrame</span>
           </div>
           <div style={{ display: "flex", gap: 4, position: "absolute", left: "50%", transform: "translateX(-50%)" }}>
