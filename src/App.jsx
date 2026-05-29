@@ -104,11 +104,25 @@ export default function App() {
   const [notification, setNotification] = useState(null);
   const [authCallbackActive] = useState(() => {
     if (typeof window === 'undefined') return false;
-    const hash = window.location.hash;
-    const params = new URLSearchParams(window.location.search);
-    return /access_token|type=(recovery|email_change|signup|magiclink)/.test(hash)
-      || !!params.get('code')
-      || !!params.get('view');
+    const hash = window.location.hash || '';
+    const search = window.location.search || '';
+    const params = new URLSearchParams(search);
+    const result = (
+      hash.length > 1
+      || params.has('code')
+      || params.has('token')
+      || params.has('token_hash')
+      || params.has('type')
+      || params.has('error')
+      || params.has('error_code')
+      || params.has('error_description')
+      || params.has('view')
+    );
+    try {
+      // eslint-disable-next-line no-console
+      console.log('[LifeFrame] URL state on load:', { hash, search, bypassActive: result });
+    } catch (_) {}
+    return result;
   });
   const [currency, setCurrency] = useState("GBP");
   const [rates, setRates] = useState({ GBP: 1, USD: 1.27, EUR: 1.17 });
