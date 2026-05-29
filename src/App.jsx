@@ -172,6 +172,7 @@ export default function App() {
       const authedEmail = session.user.email;
       const admin = authedEmail === ADMIN_EMAIL;
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+      try { await supabase.functions.invoke('claim-purchases'); } catch (e) { console.warn('Claim skipped:', e); }
       const { data: purchaseRows } = await supabase.from('purchases').select('photo_id').eq('user_id', session.user.id);
       const purchasedIds = (purchaseRows || []).map(r => r.photo_id);
       setUser({
@@ -184,6 +185,14 @@ export default function App() {
     };
     restoreSession();
   }, []);
+
+  useEffect(() => {
+    const requestedView = new URLSearchParams(window.location.search).get('view');
+    if (requestedView === 'library' && user) {
+      setView('library');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [user]);
 
 useEffect(() => {
   const loadSales = async () => {
@@ -468,7 +477,8 @@ const toggleHero = async (photoId, currentValue) => {
   .eq('id', data.user.id)
   .single();
 
-// Load all purchases by this user
+// Claim any past guest purchases made with this email, then load purchases
+try { await supabase.functions.invoke('claim-purchases'); } catch (e) { console.warn('Claim skipped:', e); }
 const { data: purchaseRows } = await supabase
   .from('purchases')
   .select('photo_id')
@@ -1030,6 +1040,7 @@ const permanentDelete = async (photo) => {
 
   if (
     COMING_SOON
+    && !user
     && new URLSearchParams(window.location.search).get("preview") !== "lifeframe"
     && !new URLSearchParams(window.location.search).get("code")
     && !new URLSearchParams(window.location.search).get("payment")
@@ -1287,7 +1298,7 @@ const permanentDelete = async (photo) => {
             {selected.description && <p style={{ fontSize: 13, color: "#555", lineHeight: 1.6, marginBottom: 16, borderTop: "0.5px solid #eee", paddingTop: 14 }}>{selected.description}</p>}
             {(selected.camera || selected.lens || selected.aperture || selected.shutter || selected.iso || selected.focal_length || selected.date_taken || selected.dimensions) && (
               <div style={{ borderTop: "0.5px solid #eee", paddingTop: 14, marginBottom: 16 }}>
-                <p style={{ fontSize: 11, color: "#aaa", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 }}>Camera info</p>
+                <p style={{ fontSize: 11, color: "#aaa", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 }}>Photo info</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {[["Camera", selected.camera], ["Lens", selected.lens], ["Focal length", selected.focal_length], ["Aperture", selected.aperture], ["Shutter speed", selected.shutter], ["ISO", selected.iso], ["Dimensions", selected.dimensions], ["Date taken", selected.date_taken]].filter(([, v]) => v).map(([l, v]) => (
                     <div key={l}><p style={{ margin: 0, fontSize: 11, color: "#aaa" }}>{l}</p><p style={{ margin: 0, fontSize: 13, fontWeight: 500 }}>{v}</p></div>
@@ -1644,11 +1655,11 @@ const permanentDelete = async (photo) => {
                         {owned && <span style={{ fontSize: 13, fontWeight: 600, color: "#2e7d32", background: "#e8f5e9", padding: "3px 9px", borderRadius: 20, flexShrink: 0 }}>Owned</span>}
                       </div>
                       {p.description && <p style={{ fontSize: 12, color: "#666", lineHeight: 1.5, margin: 0 }}>{p.description}</p>}
-                      {(p.camera || p.lens || p.aperture || p.shutter || p.iso) && (
+                      {(p.camera || p.lens || p.aperture || p.shutter || p.iso || p.focal_length || p.dimensions || p.date_taken) && (
                         <div style={{ borderTop: "0.5px solid #eee", paddingTop: 10, marginTop: 2 }}>
-                          <p style={{ fontSize: 10, color: "#aaa", textTransform: "uppercase", letterSpacing: 0.6, margin: "0 0 6px" }}>Camera info</p>
+                          <p style={{ fontSize: 10, color: "#aaa", textTransform: "uppercase", letterSpacing: 0.6, margin: "0 0 6px" }}>Photo info</p>
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 12px" }}>
-                            {[["Camera", p.camera], ["Lens", p.lens], ["Aperture", p.aperture], ["Shutter", p.shutter], ["ISO", p.iso]].filter(([, v]) => v).map(([l, v]) => (
+                            {[["Camera", p.camera], ["Lens", p.lens], ["Focal length", p.focal_length], ["Aperture", p.aperture], ["Shutter", p.shutter], ["ISO", p.iso], ["Dimensions", p.dimensions], ["Date taken", p.date_taken]].filter(([, v]) => v).map(([l, v]) => (
                               <div key={l} style={{ fontSize: 11 }}>
                                 <span style={{ color: "#aaa" }}>{l}: </span>
                                 <span style={{ color: "#333", fontWeight: 500 }}>{v}</span>
