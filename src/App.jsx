@@ -20,6 +20,7 @@ const ADMIN_EMAIL = "admin@lifeframe.com";
 // "Launching soon" page. You can still access the full site at:
 //   https://lifeframestudio.com/?preview=lifeframe
 const COMING_SOON = true;
+const LOGO_URL = "https://xriefqceuirdujtoxkuc.supabase.co/storage/v1/object/public/public-assets/logo.png";
 // ─────────────────────────────────────────────────────────────────
 const SYMBOLS = { GBP: "£", USD: "$", EUR: "€" };
 
@@ -210,6 +211,21 @@ export default function App() {
       });
     };
     restoreSession();
+  }, []);
+
+  useEffect(() => {
+    const hash = window.location.hash || '';
+    if (!hash) return;
+    const params = new URLSearchParams(hash.startsWith('#') ? hash.slice(1) : hash);
+    const message = params.get('message');
+    const errorDesc = params.get('error_description');
+    if (message) {
+      notify(decodeURIComponent(message.replace(/\+/g, ' ')));
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (errorDesc) {
+      notify(decodeURIComponent(errorDesc.replace(/\+/g, ' ')));
+      window.history.replaceState({}, '', window.location.pathname);
+    }
   }, []);
 
   useEffect(() => {
@@ -910,17 +926,7 @@ const permanentDelete = async (photo) => {
   const page   = { fontFamily: '"Elms Sans", system-ui, sans-serif', width: "100%", paddingBottom: "4rem" };
   const menuItem = { display: "block", width: "100%", textAlign: "left", padding: "8px 12px", border: "none", background: "none", borderRadius: 6, fontSize: 13, cursor: "pointer", color: "#333" };
   const Logo = ({ size = 22 }) => (
-    <svg width={size} height={size} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{ display: "block" }}>
-      <circle cx="50" cy="50" r="48" fill="#111" />
-      <g transform="translate(50,50)" stroke="#fafafa" strokeWidth="1.4" strokeLinejoin="round">
-        <path d="M0 -46 L36 -28 L12 -6 L0 -20 Z" fill="#111" />
-        <g transform="rotate(60)"><path d="M0 -46 L36 -28 L12 -6 L0 -20 Z" fill="#2a2a2a" /></g>
-        <g transform="rotate(120)"><path d="M0 -46 L36 -28 L12 -6 L0 -20 Z" fill="#111" /></g>
-        <g transform="rotate(180)"><path d="M0 -46 L36 -28 L12 -6 L0 -20 Z" fill="#2a2a2a" /></g>
-        <g transform="rotate(240)"><path d="M0 -46 L36 -28 L12 -6 L0 -20 Z" fill="#111" /></g>
-        <g transform="rotate(300)"><path d="M0 -46 L36 -28 L12 -6 L0 -20 Z" fill="#2a2a2a" /></g>
-      </g>
-    </svg>
+    <img src={LOGO_URL} alt="LifeFrame" width={size} height={size} style={{ display: "block", objectFit: "contain" }} />
   );
 
   const NavBar = () => (
@@ -1074,17 +1080,7 @@ const permanentDelete = async (photo) => {
     && view !== "checkout"
   ) return (
     <div style={{ fontFamily: '"Elms Sans", system-ui, sans-serif', minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "2rem", background: "#111", color: "#fff" }}>
-      <svg width={64} height={64} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{ display: "block", marginBottom: 28 }}>
-        <circle cx="50" cy="50" r="48" fill="#fafafa" />
-        <g transform="translate(50,50)" stroke="#111" strokeWidth="1.4" strokeLinejoin="round">
-          <path d="M0 -46 L36 -28 L12 -6 L0 -20 Z" fill="#fafafa" />
-          <g transform="rotate(60)"><path d="M0 -46 L36 -28 L12 -6 L0 -20 Z" fill="#e0e0e0" /></g>
-          <g transform="rotate(120)"><path d="M0 -46 L36 -28 L12 -6 L0 -20 Z" fill="#fafafa" /></g>
-          <g transform="rotate(180)"><path d="M0 -46 L36 -28 L12 -6 L0 -20 Z" fill="#e0e0e0" /></g>
-          <g transform="rotate(240)"><path d="M0 -46 L36 -28 L12 -6 L0 -20 Z" fill="#fafafa" /></g>
-          <g transform="rotate(300)"><path d="M0 -46 L36 -28 L12 -6 L0 -20 Z" fill="#e0e0e0" /></g>
-        </g>
-      </svg>
+      <img src={LOGO_URL} alt="LifeFrame" width={64} height={64} style={{ display: "block", marginBottom: 28, objectFit: "contain", filter: "brightness(0) invert(1)" }} />
       <p style={{ fontSize: 13, letterSpacing: 3, color: "#7dd3fc", textTransform: "uppercase", marginBottom: 18 }}>LifeFrame</p>
       <h1 style={{ fontSize: 40, fontWeight: 700, letterSpacing: -1.5, margin: "0 0 18px", lineHeight: 1.2, maxWidth: 600 }}>Something beautiful is coming.</h1>
       <p style={{ fontSize: 16, color: "rgba(255,255,255,0.75)", maxWidth: 420, lineHeight: 1.7, margin: "0 0 32px" }}>An original photography collection — moments captured, yours to keep. Launching soon.</p>
