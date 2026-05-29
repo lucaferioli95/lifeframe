@@ -409,6 +409,7 @@ const handlePay = async () => {
 	cancelUrl: window.location.origin + '/',
         userId: currentUserId,
         guestEmail: isGuest ? guestEmail : null,
+        email: isGuest ? guestEmail : (user?.email || null),
       },
     });
 
@@ -1267,7 +1268,6 @@ const permanentDelete = async (photo) => {
                 style={{ position: "relative", maxWidth: "90vw", maxHeight: "90vh", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", cursor: zoomActive ? "zoom-out" : "zoom-in" }}
               >
                 <img src={selected.img} alt={selected.title} draggable={false} style={{ maxWidth: "90vw", maxHeight: "90vh", objectFit: "contain", borderRadius: 4, userSelect: "none", pointerEvents: "none", transform: zoomActive ? "scale(2.5)" : "scale(1)", transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`, transition: "transform 0.3s ease" }} />
-                <span style={{ position: "absolute", bottom: "8%", right: "6%", fontSize: 28, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: 3, textShadow: "0 2px 8px rgba(0,0,0,0.6)", pointerEvents: "none", userSelect: "none" }}>© LifeFrame</span>
                 <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%) rotate(-30deg)", fontSize: 56, fontWeight: 700, color: "rgba(255,255,255,0.12)", letterSpacing: 8, pointerEvents: "none", userSelect: "none", whiteSpace: "nowrap" }}>© LIFEFRAME PREVIEW</span>
               </div>
             </div>
