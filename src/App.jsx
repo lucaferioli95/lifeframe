@@ -102,6 +102,14 @@ export default function App() {
   const [uploadDone, setUploadDone] = useState(false);
   const [filterCat, setFilterCat] = useState("All");
   const [notification, setNotification] = useState(null);
+  const [authCallbackActive] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const hash = window.location.hash;
+    const params = new URLSearchParams(window.location.search);
+    return /access_token|type=(recovery|email_change|signup|magiclink)/.test(hash)
+      || !!params.get('code')
+      || !!params.get('view');
+  });
   const [currency, setCurrency] = useState("GBP");
   const [rates, setRates] = useState({ GBP: 1, USD: 1.27, EUR: 1.17 });
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -147,14 +155,18 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const isEmailChangeCallback = /type=email_change/.test(window.location.hash || '');
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setResetMsg(""); setResetErr("");
         setNewPass(""); setNewPassConfirm("");
         setView('resetPassword');
       }
-      if (event === 'USER_UPDATED' && /type=email_change/.test(window.location.hash)) {
-        notify('Email address updated successfully.');
+      if (event === 'USER_UPDATED' && isEmailChangeCallback) {
+        notify('Email address updated successfully. Please log in with your new email.');
+        supabase.auth.signOut();
+        setView('auth');
+        setAuthMode('login');
         window.history.replaceState({}, '', window.location.pathname);
       }
       if (event === 'SIGNED_IN' && /type=signup/.test(window.location.hash)) {
@@ -1041,10 +1053,9 @@ const permanentDelete = async (photo) => {
   if (
     COMING_SOON
     && !user
+    && !authCallbackActive
     && new URLSearchParams(window.location.search).get("preview") !== "lifeframe"
-    && !new URLSearchParams(window.location.search).get("code")
     && !new URLSearchParams(window.location.search).get("payment")
-    && !/access_token|type=(recovery|email_change|signup|magiclink)/.test(window.location.hash)
     && view !== "resetPassword"
     && view !== "checkout"
   ) return (
@@ -1620,6 +1631,18 @@ const permanentDelete = async (photo) => {
   );
 
   if (view === "library") {
+    if (!user) {
+      return (
+        <div style={page}><NavBar />
+          {notification && <div style={toast}>{notification}</div>}
+          <div style={{ padding: "0 1.5rem", textAlign: "center", marginTop: "4rem" }}>
+            <p style={{ fontWeight: 600, fontSize: 20, marginBottom: 8 }}>My Library</p>
+            <p style={{ color: "#666", fontSize: 14, marginBottom: 24, maxWidth: 360, marginLeft: "auto", marginRight: "auto", lineHeight: 1.6 }}>Log in to view your purchased photos and saved favourites.</p>
+            <button style={{ ...btnPri, padding: "11px 28px" }} onClick={() => { setAuthMode("login"); setView("auth"); }}>Log in</button>
+          </div>
+        </div>
+      );
+    }
     const listToShow = libraryTab === "purchased" ? userPurchases : userFavourites;
     return (
     <div style={page}><NavBar />
