@@ -200,13 +200,15 @@ export default function App() {
       const admin = authedEmail === ADMIN_EMAIL;
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
       try { await supabase.functions.invoke('claim-purchases'); } catch (e) { console.warn('Claim skipped:', e); }
-      const { data: purchaseRows } = await supabase.from('purchases').select('photo_id').eq('user_id', session.user.id);
+      const { data: purchaseRows } = await supabase.from('purchases').select('photo_id, stripe_receipt_url').eq('user_id', session.user.id);
       const purchasedIds = (purchaseRows || []).map(r => r.photo_id);
+      const receipts = Object.fromEntries((purchaseRows || []).filter(r => r.stripe_receipt_url).map(r => [r.photo_id, r.stripe_receipt_url]));
       setUser({
         name: profile?.name || authedEmail.split('@')[0],
         email: authedEmail,
         role: admin ? 'admin' : 'user',
         purchases: purchasedIds,
+        receipts,
         favourites: profile?.favourites || [],
       });
     };
@@ -523,15 +525,17 @@ const toggleHero = async (photoId, currentValue) => {
 try { await supabase.functions.invoke('claim-purchases'); } catch (e) { console.warn('Claim skipped:', e); }
 const { data: purchaseRows } = await supabase
   .from('purchases')
-  .select('photo_id')
+  .select('photo_id, stripe_receipt_url')
   .eq('user_id', data.user.id);
 const purchasedIds = (purchaseRows || []).map(r => r.photo_id);
+const receipts = Object.fromEntries((purchaseRows || []).filter(r => r.stripe_receipt_url).map(r => [r.photo_id, r.stripe_receipt_url]));
 
 setUser({
   name: profile?.name || data.user.email.split('@')[0],
   email: data.user.email,
   role: isAdmin ? 'admin' : 'user',
   purchases: purchasedIds,
+  receipts,
   favourites: profile?.favourites || [],
 });
 
@@ -1702,7 +1706,12 @@ const permanentDelete = async (photo) => {
                         </div>
                       )}
                       {owned
-                        ? <button type="button" onClick={() => downloadPhoto(p)} style={{ ...btnPri, display: "block", textAlign: "center", fontSize: 13, padding: "8px", marginTop: "auto", width: "100%" }}>↓ Download full resolution</button>
+                        ? <>
+                            <button type="button" onClick={() => downloadPhoto(p)} style={{ ...btnPri, display: "block", textAlign: "center", fontSize: 13, padding: "8px", marginTop: "auto", width: "100%" }}>↓ Download full resolution</button>
+                            {user.receipts && user.receipts[p.id] && (
+                              <a href={user.receipts[p.id]} target="_blank" rel="noopener noreferrer" style={{ display: "block", textAlign: "center", fontSize: 11, color: "#888", textDecoration: "none", marginTop: 4 }}>View receipt ↗</a>
+                            )}
+                          </>
                         : <div style={{ display: "flex", gap: 8, marginTop: "auto" }}>
                             <p style={{ margin: 0, fontWeight: 600, fontSize: 14, flex: 1, alignSelf: "center" }}>{sym}{convert(p.price)}</p>
                             <button style={{ ...btnPri, fontSize: 13, padding: "8px 14px" }} onClick={() => { addToCart(p.id); }}>
