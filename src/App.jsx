@@ -1189,7 +1189,7 @@ const permanentDelete = async (photo) => {
       <div style={page}>
         <NavBar />
         {notification && <div style={toast}>{notification}</div>}
-        <div style={{ position: "relative", aspectRatio: "16/9", overflow: "hidden", borderRadius: 16, margin: "0 1rem 2rem", background: "#111" }}>
+        <div style={{ position: "relative", aspectRatio: isVeryNarrow ? "4/5" : "16/9", overflow: "hidden", borderRadius: 16, margin: "0 1rem 2rem", background: "#111" }}>
           {heroes.map((p, i) => (
             <img
               key={p.id}
@@ -1199,11 +1199,11 @@ const permanentDelete = async (photo) => {
             />
           ))}
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.65) 100%)" }} />
-          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "1.5rem", color: "#fff" }}>
-            <p style={{ fontSize: 13, letterSpacing: 2, color: "#7dd3fc", textTransform: "uppercase", marginBottom: 16 }}>Photography by LifeFrame</p>
-            <h1 style={{ fontSize: 48, fontWeight: 700, letterSpacing: -1.5, margin: "0 0 20px", lineHeight: 1.15, color: "#fff" }}>Moments captured.<br />Yours to keep.</h1>
-            <p style={{ fontSize: 16, color: "rgba(255,255,255,0.9)", maxWidth: 440, margin: "0 auto 32px", lineHeight: 1.7 }}>Browse a curated collection of original photography. One-time purchase, instant download, unlimited re-downloads.</p>
-            <button style={{ ...btnPri, padding: "12px 32px", fontSize: 15, borderRadius: 24, background: "#0ea5e9", border: "none" }} onClick={() => setView("gallery")}>Browse the gallery</button>
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: isVeryNarrow ? "1rem" : "1.5rem", color: "#fff" }}>
+            <p style={{ fontSize: isVeryNarrow ? 11 : 13, letterSpacing: 2, color: "#7dd3fc", textTransform: "uppercase", marginBottom: isVeryNarrow ? 10 : 16 }}>Photography by LifeFrame</p>
+            <h1 style={{ fontSize: isVeryNarrow ? 28 : 48, fontWeight: 700, letterSpacing: isVeryNarrow ? -0.8 : -1.5, margin: isVeryNarrow ? "0 0 12px" : "0 0 20px", lineHeight: 1.15, color: "#fff" }}>Moments captured.<br />Yours to keep.</h1>
+            <p style={{ fontSize: isVeryNarrow ? 13 : 16, color: "rgba(255,255,255,0.9)", maxWidth: 440, margin: isVeryNarrow ? "0 auto 20px" : "0 auto 32px", lineHeight: 1.6 }}>Browse a curated collection of original photography. One-time purchase, instant download, unlimited re-downloads.</p>
+            <button style={{ ...btnPri, padding: isVeryNarrow ? "10px 22px" : "12px 32px", fontSize: isVeryNarrow ? 13 : 15, borderRadius: 24, background: "#0ea5e9", border: "none" }} onClick={() => setView("gallery")}>Browse the gallery</button>
           </div>
         </div>
         <Footer />
