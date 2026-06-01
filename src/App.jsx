@@ -130,7 +130,7 @@ export default function App() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [burgerOpen, setBurgerOpen] = useState(false);
   const [isNarrow, setIsNarrow] = useState(typeof window !== "undefined" && window.innerWidth < 720);
-  const [isVeryNarrow, setIsVeryNarrow] = useState(typeof window !== "undefined" && window.innerWidth < 480);
+  const [isVeryNarrow, setIsVeryNarrow] = useState(typeof window !== "undefined" && window.innerWidth < 600);
   const [isWide, setIsWide] = useState(typeof window !== "undefined" && window.innerWidth > 1400);
   const [settingsForm, setSettingsForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [settingsMsg, setSettingsMsg] = useState("");
@@ -310,7 +310,7 @@ is_hero: p.is_hero,
 }, []);
 
   useEffect(() => {
-    const onResize = () => { setIsNarrow(window.innerWidth < 720); setIsVeryNarrow(window.innerWidth < 480); setIsWide(window.innerWidth > 1400); };
+    const onResize = () => { setIsNarrow(window.innerWidth < 720); setIsVeryNarrow(window.innerWidth < 600); setIsWide(window.innerWidth > 1400); };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -1156,7 +1156,7 @@ const permanentDelete = async (photo) => {
         <p style={{ fontSize: 13, letterSpacing: 2, color: "#0ea5e9", textTransform: "uppercase", marginBottom: 16 }}>Contact</p>
         <h1 style={{ fontSize: 42, fontWeight: 700, letterSpacing: -1.5, margin: "0 0 16px", lineHeight: 1.15 }}>Get in touch</h1>
         <p style={{ fontSize: 15, color: "#666", lineHeight: 1.7, marginBottom: 32 }}>
-          For commissions, commercial licensing, or general questions — drop a message below or email me directly at <a href="mailto:hello@lifeframestudio.com" style={{ color: "#0ea5e9", textDecoration: "none" }}>hello@lifeframestudio.com</a>.
+          For general questions, commercial licensing, or if you're interested in collaborating — drop a message below or email me directly at <a href="mailto:hello@lifeframestudio.com" style={{ color: "#0ea5e9", textDecoration: "none" }}>hello@lifeframestudio.com</a>.
         </p>
         <div style={{ background: "#fff", border: "0.5px solid #e0e0e0", borderRadius: 14, padding: "1.5rem" }}>
           <div style={label}>Your name</div>
