@@ -302,6 +302,7 @@ useEffect(() => {
       is_retired: p.is_retired,
       storage_path: p.storage_path,
 is_hero: p.is_hero,
+is_category_cover: p.is_category_cover,
     }));
 
     setPhotos(mapped);
@@ -504,6 +505,20 @@ const toggleHero = async (photoId, currentValue) => {
   }
   setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, is_hero: newValue } : p));
   notify(newValue ? 'Added to hero gallery.' : 'Removed from hero gallery.');
+};
+
+const toggleCategoryCover = async (photoId, currentValue) => {
+  const newValue = !currentValue;
+  const { error } = await supabase
+    .from('photos')
+    .update({ is_category_cover: newValue })
+    .eq('id', photoId);
+  if (error) {
+    notify('Could not update: ' + error.message);
+    return;
+  }
+  setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, is_category_cover: newValue } : p));
+  notify(newValue ? 'Set as category cover.' : 'Removed as category cover.');
 };
  const handleAuth = async () => {
   setAuthErr("");
@@ -1207,16 +1222,6 @@ const permanentDelete = async (photo) => {
           </div>
         </div>
 
-        {/* About teaser */}
-        <section style={{ maxWidth: 720, margin: "1rem auto 4rem", padding: "0 1.5rem", textAlign: "center" }}>
-          <p style={{ fontSize: 12, letterSpacing: 2, color: "#0ea5e9", textTransform: "uppercase", marginBottom: 14 }}>About</p>
-          <h2 style={{ fontSize: isVeryNarrow ? 26 : 34, fontWeight: 700, letterSpacing: -0.8, margin: "0 0 18px", lineHeight: 1.2 }}>The story behind LifeFrame</h2>
-          <p style={{ fontSize: isVeryNarrow ? 14 : 16, color: "#555", lineHeight: 1.75, margin: "0 0 20px" }}>
-            I'm Luca, a London-based photographer. I make photographs of quiet, in-between moments — places before they fill with people, light just before it changes. Every photo here is mine, edited the way I'd hang it on my own wall.
-          </p>
-          <button style={{ ...btn, fontSize: 14, color: "#0ea5e9", border: "none", padding: 0, cursor: "pointer" }} onClick={() => setView("about")}>More about me →</button>
-        </section>
-
         {/* How it works */}
         <section style={{ background: "#fafafa", padding: isVeryNarrow ? "2.5rem 1rem" : "3.5rem 1.5rem", marginBottom: "4rem", borderTop: "0.5px solid #eee", borderBottom: "0.5px solid #eee" }}>
           <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
@@ -1243,34 +1248,45 @@ const permanentDelete = async (photo) => {
           const tiles = topLevelCats
             .map(top => {
               const subIds = categoryList.filter(c => c.parent_id === top.id).map(c => c.name);
-              const sample = photos.find(p => !p.is_retired && (p.category === top.name || subIds.includes(p.category)));
+              const cover = photos.find(p => !p.is_retired && p.is_category_cover && (p.category === top.name || subIds.includes(p.category)));
+              const sample = cover || photos.find(p => !p.is_retired && (p.category === top.name || subIds.includes(p.category)));
               return sample ? { name: top.name, photo: sample } : null;
             })
             .filter(Boolean)
             .slice(0, 4);
           if (tiles.length === 0) return null;
           return (
-            <section style={{ maxWidth: 1100, margin: "0 auto 4rem", padding: "0 1.5rem" }}>
-              <div style={{ textAlign: "center", marginBottom: 28 }}>
-                <p style={{ fontSize: 12, letterSpacing: 2, color: "#0ea5e9", textTransform: "uppercase", marginBottom: 12 }}>Collections</p>
-                <h2 style={{ fontSize: isVeryNarrow ? 24 : 32, fontWeight: 700, letterSpacing: -0.8, margin: 0, lineHeight: 1.2 }}>Browse by theme</h2>
+            <section style={{ maxWidth: 900, margin: "0 auto 4rem", padding: "0 1.5rem" }}>
+              <div style={{ textAlign: "center", marginBottom: 22 }}>
+                <p style={{ fontSize: 12, letterSpacing: 2, color: "#0ea5e9", textTransform: "uppercase", marginBottom: 10 }}>Collections</p>
+                <h2 style={{ fontSize: isVeryNarrow ? 22 : 28, fontWeight: 700, letterSpacing: -0.6, margin: 0, lineHeight: 1.2 }}>Browse by theme</h2>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: isVeryNarrow ? "repeat(2, 1fr)" : `repeat(${Math.min(tiles.length, 4)}, 1fr)`, gap: isVeryNarrow ? 10 : 16 }}>
+              <div style={{ display: "grid", gridTemplateColumns: isVeryNarrow ? "repeat(2, 1fr)" : `repeat(${Math.min(tiles.length, 4)}, 1fr)`, gap: isVeryNarrow ? 10 : 14 }}>
                 {tiles.map(tile => (
                   <button
                     key={tile.name}
                     onClick={() => { setFilterCat(tile.name); setView("gallery"); }}
-                    style={{ position: "relative", aspectRatio: "4/5", overflow: "hidden", borderRadius: 12, border: "none", cursor: "pointer", padding: 0, background: "#111" }}
+                    style={{ position: "relative", aspectRatio: "3/2", overflow: "hidden", borderRadius: 10, border: "none", cursor: "pointer", padding: 0, background: "#111" }}
                   >
-                    <img src={tile.photo.thumb} alt={tile.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.4s ease" }} />
-                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 60%)" }} />
-                    <p style={{ position: "absolute", left: 0, right: 0, bottom: isVeryNarrow ? 12 : 18, color: "#fff", fontSize: isVeryNarrow ? 15 : 18, fontWeight: 600, letterSpacing: -0.3, margin: 0, textAlign: "center" }}>{tile.name}</p>
+                    <img src={tile.photo.thumb} alt={tile.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 65%)" }} />
+                    <p style={{ position: "absolute", left: 0, right: 0, bottom: isVeryNarrow ? 8 : 12, color: "#fff", fontSize: isVeryNarrow ? 13 : 15, fontWeight: 600, letterSpacing: -0.2, margin: 0, textAlign: "center" }}>{tile.name}</p>
                   </button>
                 ))}
               </div>
             </section>
           );
         })()}
+
+        {/* About teaser */}
+        <section style={{ maxWidth: 720, margin: "0 auto 4rem", padding: "0 1.5rem", textAlign: "center" }}>
+          <p style={{ fontSize: 12, letterSpacing: 2, color: "#0ea5e9", textTransform: "uppercase", marginBottom: 14 }}>About</p>
+          <h2 style={{ fontSize: isVeryNarrow ? 26 : 34, fontWeight: 700, letterSpacing: -0.8, margin: "0 0 18px", lineHeight: 1.2 }}>The story behind LifeFrame</h2>
+          <p style={{ fontSize: isVeryNarrow ? 14 : 16, color: "#555", lineHeight: 1.75, margin: "0 0 20px" }}>
+            I'm Luca, a London-based photographer. I make photographs of quiet, in-between moments — places before they fill with people, light just before it changes. Every photo here is mine, edited the way I'd hang it on my own wall.
+          </p>
+          <button style={{ ...btn, fontSize: 14, color: "#0ea5e9", border: "none", padding: 0, cursor: "pointer" }} onClick={() => setView("about")}>More about me →</button>
+        </section>
 
         <Footer />
       </div>
@@ -2012,6 +2028,24 @@ const permanentDelete = async (photo) => {
                   onClick={() => toggleHero(p.id, p.is_hero)}
                 >
                   {p.is_hero ? "★ In hero gallery" : "Add to hero"}
+                </button>
+              )}
+              {!p.is_retired && (
+                <button
+                  style={{
+                    padding: "5px 12px",
+                    borderRadius: 6,
+                    border: "0.5px solid " + (p.is_category_cover ? "#7dd3fc" : "#ddd"),
+                    background: p.is_category_cover ? "#e0f2fe" : "transparent",
+                    cursor: "pointer",
+                    fontSize: 12,
+                    color: p.is_category_cover ? "#0369a1" : "#555",
+                    fontWeight: p.is_category_cover ? 600 : 400,
+                    marginRight: 8
+                  }}
+                  onClick={() => toggleCategoryCover(p.id, p.is_category_cover)}
+                >
+                  {p.is_category_cover ? "◉ Category cover" : "Set as cover"}
                 </button>
               )}
               {!p.is_retired && (
