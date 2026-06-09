@@ -1150,13 +1150,19 @@ const permanentDelete = async (photo) => {
         <p style={{ fontSize: 13, letterSpacing: 2, color: "#0ea5e9", textTransform: "uppercase", marginBottom: 16 }}>About</p>
         <h1 style={{ fontSize: 42, fontWeight: 700, letterSpacing: -1.5, margin: "0 0 32px", lineHeight: 1.15 }}>The story behind LifeFrame</h1>
         <p style={{ fontSize: 17, color: "#444", lineHeight: 1.8, marginBottom: 20 }}>
-          Welcome to LifeFrame. I'm a photographer based in London, capturing the light and quiet drama of landscapes, cities, and the moments in between.
+          Hi, I'm Luca, an Italian photographer based in London. My journey into photography began as a hobby when I bought my first DSLR camera in my early twenties. Like many people, I initially picked up a camera simply to record my holiday moments with something better than the phone camera (and because the shutter click is so cool), without really knowing how to use it beyond automatic mode.
         </p>
         <p style={{ fontSize: 17, color: "#444", lineHeight: 1.8, marginBottom: 20 }}>
-          Every photo on this site is taken, edited, and selected by me. When you buy a photo, you get the original full-resolution file — yours to keep, print, and download as many times as you like.
+          Over the last few years, however, photography has become much more than that. I have immersed myself in learning the craft, understanding camera settings, shooting in manual mode, studying composition and light, investing in better equipment, and exploring new locations in search of unique images and subjects. I am fortunate to live close to some wonderful green spaces, such as Richmond and Bushy Park, and many of my favourite photographs come from solo walks in these areas, capturing fleeting moments of local wildlife and everyday life.
+        </p>
+        <p style={{ fontSize: 17, color: "#444", lineHeight: 1.8, marginBottom: 20 }}>
+          I have also been lucky enough to travel to some incredible destinations around the world. Each journey has strengthened my passion for photography and given me the opportunity to experience and capture remarkable moments. Through this website, I am sharing a selection of my favourite images—the scenes, wildlife, landscapes, and experiences that I was fortunate enough to witness through my lens and preserve forever.
+        </p>
+        <p style={{ fontSize: 17, color: "#444", lineHeight: 1.8, marginBottom: 20 }}>
+          Building this website has been another exciting project, to which I have happily dedicated a few (hundred) hours. Although I had never built anything like this before, with a lot of help from modern tools, patience, and a lot of trial and error, I was able to create something I am genuinely proud of. Nevertheless, the site is always evolving, and I will continue improving and expanding it over time.
         </p>
         <p style={{ fontSize: 17, color: "#444", lineHeight: 1.8 }}>
-          For commissions, prints, or just to say hello, get in touch at <a href="mailto:hello@lifeframestudio.com" style={{ color: "#0ea5e9", textDecoration: "none" }}>hello@lifeframestudio.com</a>.
+          If you have any questions, feedback, photography suggestions, or simply want to connect, feel free to get in touch through the <button onClick={() => setView("contact")} style={{ color: "#0ea5e9", background: "none", border: "none", padding: 0, font: "inherit", cursor: "pointer", textDecoration: "none" }}>Contact page</button>. Thank you for visiting, and I hope you enjoy my work.
         </p>
       </div>
       <Footer />
@@ -1283,7 +1289,7 @@ const permanentDelete = async (photo) => {
           <p style={{ fontSize: 12, letterSpacing: 2, color: "#0ea5e9", textTransform: "uppercase", marginBottom: 14 }}>About</p>
           <h2 style={{ fontSize: isVeryNarrow ? 26 : 34, fontWeight: 700, letterSpacing: -0.8, margin: "0 0 18px", lineHeight: 1.2 }}>The story behind LifeFrame</h2>
           <p style={{ fontSize: isVeryNarrow ? 14 : 16, color: "#555", lineHeight: 1.75, margin: "0 0 20px" }}>
-            I'm Luca, a London-based photographer. I make photographs of quiet, in-between moments — places before they fill with people, light just before it changes. Every photo here is mine, edited the way I'd hang it on my own wall.
+            I'm Luca, an Italian photographer based in London. What started as a hobby has become a real craft — chasing light, walking parks at dawn, traveling for the right moment. The photographs here are a selection I'm proud of, available for you to keep.
           </p>
           <button style={{ ...btn, fontSize: 14, color: "#0ea5e9", border: "none", padding: 0, cursor: "pointer" }} onClick={() => setView("about")}>More about me →</button>
         </section>
