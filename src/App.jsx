@@ -1206,6 +1206,72 @@ const permanentDelete = async (photo) => {
             <button style={{ ...btnPri, padding: isVeryNarrow ? "10px 22px" : "12px 32px", fontSize: isVeryNarrow ? 13 : 15, borderRadius: 24, background: "#0ea5e9", border: "none" }} onClick={() => setView("gallery")}>Browse the gallery</button>
           </div>
         </div>
+
+        {/* About teaser */}
+        <section style={{ maxWidth: 720, margin: "1rem auto 4rem", padding: "0 1.5rem", textAlign: "center" }}>
+          <p style={{ fontSize: 12, letterSpacing: 2, color: "#0ea5e9", textTransform: "uppercase", marginBottom: 14 }}>About</p>
+          <h2 style={{ fontSize: isVeryNarrow ? 26 : 34, fontWeight: 700, letterSpacing: -0.8, margin: "0 0 18px", lineHeight: 1.2 }}>The story behind LifeFrame</h2>
+          <p style={{ fontSize: isVeryNarrow ? 14 : 16, color: "#555", lineHeight: 1.75, margin: "0 0 20px" }}>
+            I'm Luca, a London-based photographer. I make photographs of quiet, in-between moments — places before they fill with people, light just before it changes. Every photo here is mine, edited the way I'd hang it on my own wall.
+          </p>
+          <button style={{ ...btn, fontSize: 14, color: "#0ea5e9", border: "none", padding: 0, cursor: "pointer" }} onClick={() => setView("about")}>More about me →</button>
+        </section>
+
+        {/* How it works */}
+        <section style={{ background: "#fafafa", padding: isVeryNarrow ? "2.5rem 1rem" : "3.5rem 1.5rem", marginBottom: "4rem", borderTop: "0.5px solid #eee", borderBottom: "0.5px solid #eee" }}>
+          <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
+            <p style={{ fontSize: 12, letterSpacing: 2, color: "#0ea5e9", textTransform: "uppercase", marginBottom: 14 }}>How it works</p>
+            <h2 style={{ fontSize: isVeryNarrow ? 24 : 32, fontWeight: 700, letterSpacing: -0.8, margin: "0 0 36px", lineHeight: 1.2 }}>From browsing to download, in three steps</h2>
+            <div style={{ display: "grid", gridTemplateColumns: isVeryNarrow ? "1fr" : "repeat(3, 1fr)", gap: isVeryNarrow ? 28 : 32, textAlign: "left" }}>
+              {[
+                { n: "01", title: "Browse the gallery", body: "Explore the curated collection. Filter by theme, save favourites, or zoom in to inspect each photo up close." },
+                { n: "02", title: "Buy securely", body: "Checkout in seconds via Stripe — card or wallet. As a guest, or with a free account to keep everything in your library." },
+                { n: "03", title: "Download instantly", body: "Full-resolution files, delivered straight to your inbox. Logged-in members can re-download anytime from their library." }
+              ].map(step => (
+                <div key={step.n}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#0ea5e9", letterSpacing: 1, margin: "0 0 10px" }}>{step.n}</p>
+                  <p style={{ fontSize: 16, fontWeight: 600, margin: "0 0 8px", letterSpacing: -0.2 }}>{step.title}</p>
+                  <p style={{ fontSize: 14, color: "#666", lineHeight: 1.65, margin: 0 }}>{step.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Browse by category */}
+        {(() => {
+          const tiles = topLevelCats
+            .map(top => {
+              const subIds = categoryList.filter(c => c.parent_id === top.id).map(c => c.name);
+              const sample = photos.find(p => !p.is_retired && (p.category === top.name || subIds.includes(p.category)));
+              return sample ? { name: top.name, photo: sample } : null;
+            })
+            .filter(Boolean)
+            .slice(0, 4);
+          if (tiles.length === 0) return null;
+          return (
+            <section style={{ maxWidth: 1100, margin: "0 auto 4rem", padding: "0 1.5rem" }}>
+              <div style={{ textAlign: "center", marginBottom: 28 }}>
+                <p style={{ fontSize: 12, letterSpacing: 2, color: "#0ea5e9", textTransform: "uppercase", marginBottom: 12 }}>Collections</p>
+                <h2 style={{ fontSize: isVeryNarrow ? 24 : 32, fontWeight: 700, letterSpacing: -0.8, margin: 0, lineHeight: 1.2 }}>Browse by theme</h2>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: isVeryNarrow ? "repeat(2, 1fr)" : `repeat(${Math.min(tiles.length, 4)}, 1fr)`, gap: isVeryNarrow ? 10 : 16 }}>
+                {tiles.map(tile => (
+                  <button
+                    key={tile.name}
+                    onClick={() => { setFilterCat(tile.name); setView("gallery"); }}
+                    style={{ position: "relative", aspectRatio: "4/5", overflow: "hidden", borderRadius: 12, border: "none", cursor: "pointer", padding: 0, background: "#111" }}
+                  >
+                    <img src={tile.photo.thumb} alt={tile.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.4s ease" }} />
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 60%)" }} />
+                    <p style={{ position: "absolute", left: 0, right: 0, bottom: isVeryNarrow ? 12 : 18, color: "#fff", fontSize: isVeryNarrow ? 15 : 18, fontWeight: 600, letterSpacing: -0.3, margin: 0, textAlign: "center" }}>{tile.name}</p>
+                  </button>
+                ))}
+              </div>
+            </section>
+          );
+        })()}
+
         <Footer />
       </div>
     );
