@@ -1239,7 +1239,7 @@ const permanentDelete = async (photo) => {
                 { n: "02", title: "Buy securely", body: "Checkout in seconds via Stripe — card or wallet. As a guest, or with a free account to keep everything in your library." },
                 { n: "03", title: "Download instantly", body: "Full-resolution files, delivered straight to your inbox. Logged-in members can re-download anytime from their library." }
               ].map(step => (
-                <div key={step.n}>
+                <div key={step.n} style={{ background: "#fff", border: "0.5px solid #e8e8e8", borderRadius: 12, padding: isVeryNarrow ? "20px 18px" : "24px 22px" }}>
                   <p style={{ fontSize: 13, fontWeight: 600, color: "#0ea5e9", letterSpacing: 1, margin: "0 0 10px" }}>{step.n}</p>
                   <p style={{ fontSize: 16, fontWeight: 600, margin: "0 0 8px", letterSpacing: -0.2 }}>{step.title}</p>
                   <p style={{ fontSize: 14, color: "#666", lineHeight: 1.65, margin: 0 }}>{step.body}</p>
@@ -1285,13 +1285,15 @@ const permanentDelete = async (photo) => {
         })()}
 
         {/* About teaser */}
-        <section style={{ maxWidth: 720, margin: "0 auto 4rem", padding: "0 1.5rem", textAlign: "center" }}>
-          <p style={{ fontSize: 12, letterSpacing: 2, color: "#0ea5e9", textTransform: "uppercase", marginBottom: 14 }}>About</p>
-          <h2 style={{ fontSize: isVeryNarrow ? 26 : 34, fontWeight: 700, letterSpacing: -0.8, margin: "0 0 18px", lineHeight: 1.2 }}>The story behind LifeFrame</h2>
-          <p style={{ fontSize: isVeryNarrow ? 14 : 16, color: "#555", lineHeight: 1.75, margin: "0 0 20px" }}>
-            I'm Luca, an Italian photographer based in London. What started as a hobby has become a real craft — chasing light, walking parks at dawn, traveling for the right moment. The photographs here are a selection I'm proud of, available for you to keep.
-          </p>
-          <button style={{ ...btn, fontSize: 14, color: "#0ea5e9", border: "none", padding: 0, cursor: "pointer" }} onClick={() => setView("about")}>More about me →</button>
+        <section style={{ background: "#fafafa", padding: isVeryNarrow ? "2.5rem 1rem" : "3.5rem 1.5rem", marginBottom: "4rem", borderTop: "0.5px solid #eee", borderBottom: "0.5px solid #eee" }}>
+          <div style={{ maxWidth: 720, margin: "0 auto", textAlign: "center" }}>
+            <p style={{ fontSize: 12, letterSpacing: 2, color: "#0ea5e9", textTransform: "uppercase", marginBottom: 14 }}>About</p>
+            <h2 style={{ fontSize: isVeryNarrow ? 26 : 34, fontWeight: 700, letterSpacing: -0.8, margin: "0 0 18px", lineHeight: 1.2 }}>The story behind LifeFrame</h2>
+            <p style={{ fontSize: isVeryNarrow ? 14 : 16, color: "#555", lineHeight: 1.75, margin: "0 0 20px" }}>
+              I'm Luca, an Italian photographer based in London. What started as a hobby has become a real craft — chasing light, walking parks at dawn, traveling for the right moment. The photographs here are a selection I'm proud of, available for you to keep.
+            </p>
+            <button style={{ ...btn, fontSize: 14, color: "#0ea5e9", border: "none", padding: 0, cursor: "pointer" }} onClick={() => setView("about")}>More about me →</button>
+          </div>
         </section>
 
         <Footer />
@@ -1369,7 +1371,7 @@ const permanentDelete = async (photo) => {
       {notification && <div style={toast}>{notification}</div>}
       <div style={{ padding: "0 1.5rem" }}>
         <button style={{ ...btnSm, marginBottom: 16 }} onClick={() => setView("gallery")}>← Back</button>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 24, alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isVeryNarrow ? "1fr" : "1fr 300px", gap: 24, alignItems: "start" }}>
           <div style={{ borderRadius: 12, overflow: "hidden", position: "relative", cursor: "zoom-in" }} onClick={() => setLightbox(true)} onContextMenu={e => e.preventDefault()}>
             <img src={selected.thumb} alt={selected.title} draggable={false} style={{ width: "100%", display: "block", userSelect: "none", pointerEvents: "none" }} />
             <span style={{ position: "absolute", bottom: isWide ? 18 : 14, right: isWide ? 22 : 18, fontSize: isWide ? 32 : 22, fontWeight: 600, color: "rgba(255,255,255,0.7)", textShadow: "0 1px 4px rgba(0,0,0,0.7)", letterSpacing: 1, pointerEvents: "none", userSelect: "none" }}>© LifeFrame</span>
