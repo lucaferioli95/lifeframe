@@ -19,7 +19,7 @@ const ADMIN_EMAIL = "admin@lifeframe.com";
 // Set to false to make the site public. While true, visitors see a
 // "Launching soon" page. You can still access the full site at:
 //   https://lifeframestudio.com/?preview=lifeframe
-const COMING_SOON = true;
+const COMING_SOON = false;
 const LOGO_URL = "https://xriefqceuirdujtoxkuc.supabase.co/storage/v1/object/public/public-assets/logo.png";
 // ─────────────────────────────────────────────────────────────────
 const SYMBOLS = { GBP: "£", USD: "$", EUR: "€" };
@@ -1405,8 +1405,8 @@ const permanentDelete = async (photo) => {
       <div style={{ padding: "0 1.5rem" }}>
         <button style={{ ...btnSm, marginBottom: 16 }} onClick={() => setView("gallery")}>← Back</button>
         <div style={{ display: "grid", gridTemplateColumns: isVeryNarrow ? "1fr" : "1fr 300px", gap: 24, alignItems: "start" }}>
-          <div style={{ borderRadius: 12, overflow: "hidden", position: "relative", cursor: "zoom-in" }} onClick={() => setLightbox(true)} onContextMenu={e => e.preventDefault()}>
-            <img src={selected.thumb} alt={selected.title} draggable={false} style={{ width: "100%", display: "block", userSelect: "none", pointerEvents: "none" }} />
+          <div style={{ borderRadius: 12, overflow: "hidden", position: "relative", cursor: "zoom-in", background: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", maxHeight: "calc(100vh - 180px)" }} onClick={() => setLightbox(true)} onContextMenu={e => e.preventDefault()}>
+            <img src={selected.thumb} alt={selected.title} draggable={false} style={{ width: "100%", maxHeight: "calc(100vh - 180px)", objectFit: "contain", display: "block", userSelect: "none", pointerEvents: "none" }} />
             <span style={{ position: "absolute", bottom: isWide ? 18 : 14, right: isWide ? 22 : 18, fontSize: isWide ? 32 : 22, fontWeight: 600, color: "rgba(255,255,255,0.7)", textShadow: "0 1px 4px rgba(0,0,0,0.7)", letterSpacing: 1, pointerEvents: "none", userSelect: "none" }}>© LifeFrame</span>
             <span style={{ position: "absolute", top: isWide ? 14 : 10, right: isWide ? 14 : 10, background: "rgba(0,0,0,0.45)", color: "#fff", fontSize: isWide ? 14 : 11, padding: isWide ? "6px 12px" : "4px 8px", borderRadius: 6, pointerEvents: "none" }}>🔍 Click to preview</span>
           </div>
