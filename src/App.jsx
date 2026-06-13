@@ -919,6 +919,7 @@ const openEdit = (photo) => {
     focal_length: photo.focal_length || "",
     date_taken: photo.date_taken || "",
     dimensions: photo.dimensions || "",
+    location: photo.location || "",
   });
 };
 
@@ -937,6 +938,7 @@ const saveEdit = async () => {
     focal_length: editForm.focal_length || null,
     date_taken: editForm.date_taken || null,
     dimensions: editForm.dimensions || null,
+    location: editForm.location || null,
   }).eq('id', editingPhoto.id);
   if (error) { notify('Could not save: ' + error.message); return; }
   setPhotos(prev => prev.map(p => p.id === editingPhoto.id ? { ...p, ...editForm, price: parseFloat(editForm.price) } : p));
@@ -2238,6 +2240,7 @@ const permanentDelete = async (photo) => {
                 <div><div style={label}>Focal length</div><input style={input} value={editForm.focal_length} onChange={e => setEditForm(f => ({ ...f, focal_length: e.target.value }))} /></div>
                 <div><div style={label}>Date taken</div><input style={input} value={editForm.date_taken} onChange={e => setEditForm(f => ({ ...f, date_taken: e.target.value }))} /></div>
                 <div><div style={label}>Dimensions</div><input style={input} value={editForm.dimensions} onChange={e => setEditForm(f => ({ ...f, dimensions: e.target.value }))} /></div>
+                <div style={{ gridColumn: "1 / -1" }}><div style={label}>Location</div><input style={input} placeholder="e.g. Reykjanes, Iceland" value={editForm.location} onChange={e => setEditForm(f => ({ ...f, location: e.target.value }))} /></div>
               </div>
               <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
                 <button style={{ ...btn, flex: 1 }} onClick={() => setEditingPhoto(null)}>Cancel</button>
