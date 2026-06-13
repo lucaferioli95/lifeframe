@@ -99,7 +99,26 @@ export default function App() {
   const [lightbox, setLightbox] = useState(false);
   const [zoomActive, setZoomActive] = useState(false);
   const [zoomOrigin, setZoomOrigin] = useState({ x: 50, y: 50 });
-  const [uploadForm, setUploadForm] = useState({ title: "", category: "", price: "", description: "", camera: "", lens: "", aperture: "", shutter: "", iso: "", focal_length: "", date_taken: "", dimensions: "", file: null, preview: null });
+  const [uploadForm, setUploadForm] = useState({ title: "", category: "", price: "", description: "", camera: "", lens: "", aperture: "", shutter: "", iso: "", focal_length: "", date_taken: "", dimensions: "", location: "", file: null, preview: null });
+  const DEFAULT_LENSES = ["Tamron 70-300mm f/4-5.6 SP Di VC USD", "Sigma 24-70mm F2.8 DG OS HSM | Art"];
+  const [lensOptions, setLensOptions] = useState(() => {
+    if (typeof window === 'undefined') return DEFAULT_LENSES;
+    try {
+      const stored = JSON.parse(localStorage.getItem('lifeframe_lenses') || '[]');
+      return Array.from(new Set([...DEFAULT_LENSES, ...stored]));
+    } catch { return DEFAULT_LENSES; }
+  });
+  const [showAddLens, setShowAddLens] = useState(false);
+  const [newLensInput, setNewLensInput] = useState("");
+  const addCustomLens = () => {
+    const v = newLensInput.trim();
+    if (!v || lensOptions.includes(v)) { setShowAddLens(false); setNewLensInput(""); return; }
+    const next = [...lensOptions, v];
+    setLensOptions(next);
+    try { localStorage.setItem('lifeframe_lenses', JSON.stringify(next.filter(l => !DEFAULT_LENSES.includes(l)))); } catch {}
+    setUploadForm(f => ({ ...f, lens: v }));
+    setShowAddLens(false); setNewLensInput("");
+  };
   const [uploadDone, setUploadDone] = useState(false);
   const [filterCat, setFilterCat] = useState("All");
   const [notification, setNotification] = useState(null);
@@ -296,6 +315,7 @@ useEffect(() => {
       focal_length: p.focal_length || '',
       date_taken: p.date_taken || '',
       dimensions: p.dimensions || '',
+      location: p.location || '',
 
       thumb: p.thumb_url,
       img: p.full_url,
@@ -750,6 +770,7 @@ const handleSendContact = async () => {
       focal_length: uploadForm.focal_length || null,
       date_taken: uploadForm.date_taken || null,
       dimensions: uploadForm.dimensions || null,
+      location: uploadForm.location || null,
       thumb_url: thumbUrl,
       full_url: previewUrl,
       storage_path: filePath,
@@ -782,7 +803,7 @@ const handleSendContact = async () => {
     img: insertedPhoto.full_url,
   };
   setPhotos(prev => [newPhoto, ...prev]);
-  setUploadForm({ title: "", category: "", price: "", description: "", camera: "", lens: "", aperture: "", shutter: "", iso: "", focal_length: "", date_taken: "", dimensions: "", file: null, preview: null });
+  setUploadForm({ title: "", category: "", price: "", description: "", camera: "", lens: "", aperture: "", shutter: "", iso: "", focal_length: "", date_taken: "", dimensions: "", location: "", file: null, preview: null });
   setShowNewCategory(false); setNewCategory("");
   setUploadDone(true);
   notify("Photo uploaded!");
@@ -1394,7 +1415,6 @@ const permanentDelete = async (photo) => {
                 style={{ position: "relative", maxWidth: "90vw", maxHeight: "90vh", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", cursor: zoomActive ? "zoom-out" : "zoom-in" }}
               >
                 <img src={selected.img} alt={selected.title} draggable={false} style={{ maxWidth: "90vw", maxHeight: "90vh", objectFit: "contain", borderRadius: 4, userSelect: "none", pointerEvents: "none", transform: zoomActive ? "scale(2.5)" : "scale(1)", transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`, transition: "transform 0.3s ease" }} />
-                <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%) rotate(-30deg)", fontSize: 56, fontWeight: 700, color: "rgba(255,255,255,0.12)", letterSpacing: 8, pointerEvents: "none", userSelect: "none", whiteSpace: "nowrap" }}>© LIFEFRAME PREVIEW</span>
               </div>
             </div>
           )}
@@ -1411,11 +1431,11 @@ const permanentDelete = async (photo) => {
             <p style={{ fontSize: 28, fontWeight: 700, margin: "16px 0 4px" }}>{sym}{convert(selected.price)}</p>
             <p style={{ fontSize: 12, color: "#888", marginBottom: 16 }}>One-time purchase · unlimited re-downloads · base price in GBP</p>
             {selected.description && <p style={{ fontSize: 13, color: "#555", lineHeight: 1.6, marginBottom: 16, borderTop: "0.5px solid #eee", paddingTop: 14 }}>{selected.description}</p>}
-            {(selected.camera || selected.lens || selected.aperture || selected.shutter || selected.iso || selected.focal_length || selected.date_taken || selected.dimensions) && (
+            {(selected.camera || selected.lens || selected.aperture || selected.shutter || selected.iso || selected.focal_length || selected.date_taken || selected.dimensions || selected.location) && (
               <div style={{ borderTop: "0.5px solid #eee", paddingTop: 14, marginBottom: 16 }}>
                 <p style={{ fontSize: 11, color: "#aaa", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 }}>Photo info</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {[["Camera", selected.camera], ["Lens", selected.lens], ["Focal length", selected.focal_length], ["Aperture", selected.aperture], ["Shutter speed", selected.shutter], ["ISO", selected.iso], ["Dimensions", selected.dimensions], ["Date taken", selected.date_taken]].filter(([, v]) => v).map(([l, v]) => (
+                  {[["Camera", selected.camera], ["Lens", selected.lens], ["Focal length", selected.focal_length], ["Aperture", selected.aperture], ["Shutter speed", selected.shutter], ["ISO", selected.iso], ["Dimensions", selected.dimensions], ["Date taken", selected.date_taken], ["Location", selected.location]].filter(([, v]) => v).map(([l, v]) => (
                     <div key={l}><p style={{ margin: 0, fontSize: 11, color: "#aaa" }}>{l}</p><p style={{ margin: 0, fontSize: 13, fontWeight: 500 }}>{v}</p></div>
                   ))}
                 </div>
@@ -1782,11 +1802,11 @@ const permanentDelete = async (photo) => {
                         {owned && <span style={{ fontSize: 13, fontWeight: 600, color: "#2e7d32", background: "#e8f5e9", padding: "3px 9px", borderRadius: 20, flexShrink: 0 }}>Owned</span>}
                       </div>
                       {p.description && <p style={{ fontSize: 12, color: "#666", lineHeight: 1.5, margin: 0 }}>{p.description}</p>}
-                      {(p.camera || p.lens || p.aperture || p.shutter || p.iso || p.focal_length || p.dimensions || p.date_taken) && (
+                      {(p.camera || p.lens || p.aperture || p.shutter || p.iso || p.focal_length || p.dimensions || p.date_taken || p.location) && (
                         <div style={{ borderTop: "0.5px solid #eee", paddingTop: 10, marginTop: 2 }}>
                           <p style={{ fontSize: 10, color: "#aaa", textTransform: "uppercase", letterSpacing: 0.6, margin: "0 0 6px" }}>Photo info</p>
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 12px" }}>
-                            {[["Camera", p.camera], ["Lens", p.lens], ["Focal length", p.focal_length], ["Aperture", p.aperture], ["Shutter", p.shutter], ["ISO", p.iso], ["Dimensions", p.dimensions], ["Date taken", p.date_taken]].filter(([, v]) => v).map(([l, v]) => (
+                            {[["Camera", p.camera], ["Lens", p.lens], ["Focal length", p.focal_length], ["Aperture", p.aperture], ["Shutter", p.shutter], ["ISO", p.iso], ["Dimensions", p.dimensions], ["Date taken", p.date_taken], ["Location", p.location]].filter(([, v]) => v).map(([l, v]) => (
                               <div key={l} style={{ fontSize: 11 }}>
                                 <span style={{ color: "#aaa" }}>{l}: </span>
                                 <span style={{ color: "#333", fontWeight: 500 }}>{v}</span>
@@ -1878,13 +1898,29 @@ const permanentDelete = async (photo) => {
               <textarea style={{ ...input, height: 56, resize: "vertical" }} placeholder="Optional — scene, mood, story…" value={uploadForm.description} onChange={e => setUploadForm(f => ({ ...f, description: e.target.value }))} />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 <div><div style={label}>Camera</div><input style={input} placeholder="e.g. Sony A7 IV" value={uploadForm.camera} onChange={e => setUploadForm(f => ({ ...f, camera: e.target.value }))} /></div>
-                <div><div style={label}>Lens</div><input style={input} placeholder="e.g. 24-70mm f/2.8" value={uploadForm.lens} onChange={e => setUploadForm(f => ({ ...f, lens: e.target.value }))} /></div>
+                <div>
+                  <div style={label}>Lens</div>
+                  {showAddLens ? (
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <input style={{ ...input, marginBottom: 10 }} placeholder="e.g. 50mm f/1.8" value={newLensInput} onChange={e => setNewLensInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomLens(); } }} autoFocus />
+                      <button type="button" onClick={addCustomLens} style={{ ...btn, padding: "6px 10px", fontSize: 12, marginBottom: 10 }}>Add</button>
+                      <button type="button" onClick={() => { setShowAddLens(false); setNewLensInput(""); }} style={{ ...btn, padding: "6px 10px", fontSize: 12, marginBottom: 10 }}>✕</button>
+                    </div>
+                  ) : (
+                    <select style={input} value={uploadForm.lens} onChange={e => { const v = e.target.value; if (v === '__add__') { setShowAddLens(true); } else { setUploadForm(f => ({ ...f, lens: v })); } }}>
+                      <option value="">— Select a lens —</option>
+                      {lensOptions.map(l => <option key={l} value={l}>{l}</option>)}
+                      <option value="__add__">+ Add another lens…</option>
+                    </select>
+                  )}
+                </div>
                 <div><div style={label}>Aperture</div><input style={input} placeholder="e.g. f/2.8" value={uploadForm.aperture} onChange={e => setUploadForm(f => ({ ...f, aperture: e.target.value }))} /></div>
                 <div><div style={label}>Shutter speed</div><input style={input} placeholder="e.g. 1/500s" value={uploadForm.shutter} onChange={e => setUploadForm(f => ({ ...f, shutter: e.target.value }))} /></div>
                 <div><div style={label}>ISO</div><input style={input} placeholder="e.g. 400" value={uploadForm.iso} onChange={e => setUploadForm(f => ({ ...f, iso: e.target.value }))} /></div>
                 <div><div style={label}>Focal length</div><input style={input} placeholder="e.g. 50mm" value={uploadForm.focal_length} onChange={e => setUploadForm(f => ({ ...f, focal_length: e.target.value }))} /></div>
                 <div><div style={label}>Date taken</div><input style={input} placeholder="YYYY-MM-DD" value={uploadForm.date_taken} onChange={e => setUploadForm(f => ({ ...f, date_taken: e.target.value }))} /></div>
                 <div><div style={label}>Dimensions</div><input style={input} placeholder="e.g. 6000 × 4000" value={uploadForm.dimensions} onChange={e => setUploadForm(f => ({ ...f, dimensions: e.target.value }))} /></div>
+                <div style={{ gridColumn: "1 / -1" }}><div style={label}>Location</div><input style={input} placeholder="e.g. Reykjanes, Iceland" value={uploadForm.location} onChange={e => setUploadForm(f => ({ ...f, location: e.target.value }))} /></div>
               </div>
             </div>
           </div>
