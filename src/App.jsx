@@ -1278,10 +1278,10 @@ const permanentDelete = async (photo) => {
           const tiles = [];
           topLevelCats.forEach(top => {
             const subs = categoryList.filter(c => c.parent_id === top.id);
-            const matchesParent = (p) => p.category === top.name || subs.some(s => p.category === s.name || p.category === `${top.name} > ${s.name}`);
-            // Parent tile
-            const parentCover = photos.find(p => !p.is_retired && p.is_category_cover && matchesParent(p));
-            const parentSample = parentCover || photos.find(p => !p.is_retired && matchesParent(p));
+            // Parent tile: only if photos are directly assigned to parent (not via subs)
+            const matchesDirectParent = (p) => p.category === top.name;
+            const parentCover = photos.find(p => !p.is_retired && p.is_category_cover && matchesDirectParent(p));
+            const parentSample = parentCover || photos.find(p => !p.is_retired && matchesDirectParent(p));
             if (parentSample) tiles.push({ name: top.name, filterValue: top.name, photo: parentSample });
             // Sub tiles
             subs.forEach(sub => {
