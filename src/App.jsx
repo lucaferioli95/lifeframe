@@ -205,6 +205,7 @@ export default function App() {
       }
       if (event === 'SIGNED_IN' && /type=signup/.test(window.location.hash)) {
         notify('Email confirmed — welcome to LifeFrame!');
+        try { supabase.functions.invoke('notify-signup'); } catch (_) {}
         window.history.replaceState({}, '', window.location.pathname);
       }
     });
@@ -1369,7 +1370,7 @@ const permanentDelete = async (photo) => {
               <div style={{ padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
                   <p style={{ margin: 0, fontWeight: 500, fontSize: 14 }}>{p.title}</p>
-                  <p style={{ margin: "3px 0 0", fontSize: 12, color: "#888" }}>{p.category}</p>
+                  <p style={{ margin: "3px 0 0", fontSize: 12, color: "#888" }}>{p.location ? `${p.location} · ${p.category}` : p.category}</p>
                 </div>
                 {owned
                   ? <span style={{ fontSize: 11, color: "#2e7d32", background: "#e8f5e9", padding: "3px 8px", borderRadius: 20 }}>Owned</span>
