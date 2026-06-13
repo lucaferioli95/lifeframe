@@ -1275,27 +1275,35 @@ const permanentDelete = async (photo) => {
 
         {/* Browse by category */}
         {(() => {
-          const tiles = topLevelCats
-            .map(top => {
-              const subIds = categoryList.filter(c => c.parent_id === top.id).map(c => c.name);
-              const cover = photos.find(p => !p.is_retired && p.is_category_cover && (p.category === top.name || subIds.includes(p.category)));
-              const sample = cover || photos.find(p => !p.is_retired && (p.category === top.name || subIds.includes(p.category)));
-              return sample ? { name: top.name, photo: sample } : null;
-            })
-            .filter(Boolean)
-            .slice(0, 4);
-          if (tiles.length === 0) return null;
+          const tiles = [];
+          topLevelCats.forEach(top => {
+            const subs = categoryList.filter(c => c.parent_id === top.id);
+            const subNames = subs.map(c => c.name);
+            // Parent tile
+            const parentCover = photos.find(p => !p.is_retired && p.is_category_cover && (p.category === top.name || subNames.includes(p.category)));
+            const parentSample = parentCover || photos.find(p => !p.is_retired && (p.category === top.name || subNames.includes(p.category)));
+            if (parentSample) tiles.push({ name: top.name, filterValue: top.name, photo: parentSample });
+            // Sub tiles
+            subs.forEach(sub => {
+              const subCover = photos.find(p => !p.is_retired && p.is_category_cover && p.category === sub.name);
+              const subSample = subCover || photos.find(p => !p.is_retired && p.category === sub.name);
+              if (subSample) tiles.push({ name: sub.name, filterValue: top.name + " > " + sub.name, photo: subSample });
+            });
+          });
+          const finalTiles = tiles.slice(0, 8);
+          if (finalTiles.length === 0) return null;
+          const cols = isVeryNarrow ? 2 : Math.min(finalTiles.length, 4);
           return (
             <section style={{ maxWidth: 900, margin: "0 auto 4rem", padding: "0 1.5rem" }}>
               <div style={{ textAlign: "center", marginBottom: 22 }}>
                 <p style={{ fontSize: 12, letterSpacing: 2, color: "#0ea5e9", textTransform: "uppercase", marginBottom: 10 }}>Collections</p>
                 <h2 style={{ fontSize: isVeryNarrow ? 22 : 28, fontWeight: 700, letterSpacing: -0.6, margin: 0, lineHeight: 1.2 }}>Browse by theme</h2>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: isVeryNarrow ? "repeat(2, 1fr)" : `repeat(${Math.min(tiles.length, 4)}, 1fr)`, gap: isVeryNarrow ? 10 : 14 }}>
-                {tiles.map(tile => (
+              <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: isVeryNarrow ? 10 : 14 }}>
+                {finalTiles.map(tile => (
                   <button
-                    key={tile.name}
-                    onClick={() => { setFilterCat(tile.name); setView("gallery"); }}
+                    key={tile.filterValue}
+                    onClick={() => { setFilterCat(tile.filterValue); setView("gallery"); }}
                     style={{ position: "relative", aspectRatio: "3/2", overflow: "hidden", borderRadius: 10, border: "none", cursor: "pointer", padding: 0, background: "#111" }}
                   >
                     <img src={tile.photo.thumb} alt={tile.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
