@@ -1278,16 +1278,17 @@ const permanentDelete = async (photo) => {
           const tiles = [];
           topLevelCats.forEach(top => {
             const subs = categoryList.filter(c => c.parent_id === top.id);
-            const subNames = subs.map(c => c.name);
+            const matchesParent = (p) => p.category === top.name || subs.some(s => p.category === s.name || p.category === `${top.name} > ${s.name}`);
             // Parent tile
-            const parentCover = photos.find(p => !p.is_retired && p.is_category_cover && (p.category === top.name || subNames.includes(p.category)));
-            const parentSample = parentCover || photos.find(p => !p.is_retired && (p.category === top.name || subNames.includes(p.category)));
+            const parentCover = photos.find(p => !p.is_retired && p.is_category_cover && matchesParent(p));
+            const parentSample = parentCover || photos.find(p => !p.is_retired && matchesParent(p));
             if (parentSample) tiles.push({ name: top.name, filterValue: top.name, photo: parentSample });
             // Sub tiles
             subs.forEach(sub => {
-              const subCover = photos.find(p => !p.is_retired && p.is_category_cover && p.category === sub.name);
-              const subSample = subCover || photos.find(p => !p.is_retired && p.category === sub.name);
-              if (subSample) tiles.push({ name: sub.name, filterValue: top.name + " > " + sub.name, photo: subSample });
+              const matchesSub = (p) => p.category === sub.name || p.category === `${top.name} > ${sub.name}`;
+              const subCover = photos.find(p => !p.is_retired && p.is_category_cover && matchesSub(p));
+              const subSample = subCover || photos.find(p => !p.is_retired && matchesSub(p));
+              if (subSample) tiles.push({ name: sub.name, filterValue: `${top.name} > ${sub.name}`, photo: subSample });
             });
           });
           const finalTiles = tiles.slice(0, 8);
